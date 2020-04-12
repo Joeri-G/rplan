@@ -1,0 +1,20 @@
+{
+    "name": "joeri-g/palweekplanner",
+    "description": "backend for palweekplanner api",
+    "license": "GPL-3.0-or-later",
+    "authors": [
+        {
+            "name": "joer-g",
+            "homepage": "https://www.joerigeuzinge.nl"
+        }
+    ],
+    "require": {
+        "php": "^7.2"
+    },
+    "autoload": {
+      "psr-4": {
+        "joeri_g\\palweekplanner\\": "src/",
+        "": "src/"
+      }
+    }
+}

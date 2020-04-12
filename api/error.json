@@ -1,0 +1,72 @@
+[
+  {
+    "id": 0,
+    "http": 500,
+    "msg": "An error was detected but no code could be provided"
+  },
+  {
+    "id": 1,
+    "http": 500,
+    "msg": "No database connection provided"
+  },
+  {
+    "id": 2,
+    "http": 400,
+    "msg": "Invalid domain"
+  },
+  {
+    "id": 3,
+    "http": 500,
+    "msg": "Unknown errormode"
+  },
+  {
+    "id": 4,
+    "http": 500,
+    "msg": "Forbidden table name"
+  },
+  {
+    "id": 5,
+    "http": 500,
+    "msg": "No request object provided"
+  },
+  {
+    "id": 6,
+    "http": 400,
+    "msg": "Invalid selector"
+  },
+  {
+    "id": 7,
+    "http": 400,
+    "msg": "GUID does not exist in this collection"
+  },
+  {
+    "id": 8,
+    "http": 400,
+    "msg": "Please set all keys"
+  },
+  {
+    "id": 9,
+    "http": 403,
+    "msg": "Insufficient permissions"
+  },
+  {
+    "id": 10,
+    "http": 401,
+    "msg": "Please Authenticate Yourself Through Eiter The Login Page Or The Authentication Header"
+  },
+  {
+    "id": 11,
+    "http": 504,
+    "msg": "No action could be attached to method"
+  },
+  {
+    "id": 12,
+    "http": 400,
+    "msg": "Cannot insert ducplicate data"
+  },
+  {
+    "id": 13,
+    "http": 400,
+    "msg": "teacherAvailability must be an array of 7 with only \"1\" or \"0\""
+  }
+]
