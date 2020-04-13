@@ -13,13 +13,13 @@ class Database {
 
   public $tables = ["users"];
 
-  function __construct($response = null) {
+  function __construct($response = null, $switch = true) {
     if (is_null($response)) {
       echo "No response object provided";
       return false;
     }
     $this->response = $response;
-
+    if (!$switch) return;
     //the db depends on the domain, school1.example.com > planner_school1, school2.example.com > planner_school2, etc.
     //To lookup the database we take the domain and check it against the `domain` column in `planner_settings.plannerclients`
     $domain = $_SERVER['SERVER_NAME'];
@@ -96,7 +96,6 @@ class Database {
       //make sure the table does not contain any illegal characters
       foreach ([" ", ";", "'", "\""] as $forbidden) {
         if (strpos($table, $forbidden)) {
-          var_dump($table);
           $this->respose->sendError(4);
           return false;
         }
