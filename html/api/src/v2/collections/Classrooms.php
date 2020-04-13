@@ -62,7 +62,7 @@ class Classrooms {
 
   private function list() {
     //check selector for validity
-    if (!$this->request->checkSelector(6)) {
+    if (!$this->request->checkSelector()) {
       http_response_code(400);
       return false;
     }
