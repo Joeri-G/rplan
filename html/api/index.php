@@ -7,7 +7,7 @@ define("acceptedMethods", ["GET", "POST", "PUT", "DELETE"]); //all the accepted 
 define("versions", ["v2"]); //all supported api versions
 define("allowedCollections", ["classes", "classrooms", "teachers", "projects", "laptops", "admin", "users", "config", "appointments"]); //allowed collections
 define("tables", ["classes", "classrooms", "users", "deleted", "appointments", "projects", "teachers", "users"]);
-define("collectionException", ["admin", "conf"]);
+define("collectionException", ["conf"]);
 //start response handler
 $response = new v2\lib\ResponseHandler();
 //load error messages
