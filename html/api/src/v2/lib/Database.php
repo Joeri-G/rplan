@@ -30,7 +30,7 @@ class Database {
     }
 
     $conn = $this->connect();
-    $stmt = $conn->prepare("SELECT databaseName FROM plannerclients WHERE domain = :d AND active = 1");
+    $stmt = $conn->prepare("SELECT db, db_user, db_password, db_host FROM plannerclients WHERE domain = :d AND active = 1");
 
     $stmt->execute(["d" => $domain]);
 
@@ -42,7 +42,10 @@ class Database {
       $this->response->sendError(2);
       die();
     }
-    $this->db_name = $data["databaseName"];
+    $this->db_name = $data["db"];
+    $this->username = $data["db_user"];
+    $this->password = $data["db_password"];
+    $this->host = $data["db_host"];
   }
 
 

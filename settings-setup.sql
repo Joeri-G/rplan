@@ -1,7 +1,9 @@
 CREATE DATABASE `planner_settings`;
 CREATE TABLE `plannerclients` (
 	`domain` varchar(128) NOT NULL,
-	`databaseName` varchar(128) NOT NULL,
+	`db` varchar(128) NOT NULL,
+	`db_user` VARCHAR(128) NOT NULL,
+	`db_password` VARCHAR(128) NOT NULL,
 	`lastChanged` timestamp(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
 	`active` TINYINT NOT NULL DEFAULT 0,
 	`IP` varchar(64) NOT NULL COMMENT 'ip from where entry was added',
