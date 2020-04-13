@@ -107,14 +107,14 @@ class Teachers {
     //make sure the neccesary data is provided
     $keys = ["name", "teacherAvailability"];
     if (!$this->request->POSTisset($keys)) {
-    $this->response->sendSuccess(8);
+    $this->response->sendError(8);
       return false;
     }
     //check the teacherAvailability must be array of 7 booleans
     $teacherAvailability = $_POST["teacherAvailability"];
 
     if (gettype($teacherAvailability) !== "array" || sizeof($teacherAvailability) !== 7) {
-      $this->response->sendSuccess(13);
+      $this->response->sendError(13);
       return false;
     }
     foreach ($teacherAvailability as $n => $day) {
@@ -136,21 +136,18 @@ class Teachers {
     $stmt->execute($data);
 
     $data["lastChanged"] = date('Y-m-d H:i:s');
-    $this->output = ["successful" => true, "data" => $data];
-
+    $this->response->sendSuccess($data);
   }
 
   public function delete() {
     //check selector for validity
     if (!$this->request->checkSelector()) {
-      $this->output = ["successful" => false, "error" => "Invalid selector"];
-      http_response_code(400);
+      $this->response->sendError(6);
       return false;
     }
     //check if the user has sufficient permissions
     if ($_SESSION["userLVL"] < 3) {
-      $this->output = ["successful" => false, "error" => "Insufficient permissions"];
-      http_response_code(400);
+      $this->response->sendError(9);
       return false;
     }
     if ($this->selector == "*") {
@@ -161,7 +158,7 @@ class Teachers {
       $stmt = $this->conn->prepare("DELETE FROM teachers WHERE GUID = :GUID");
       $stmt->execute(["GUID" => $this->selector]);
     }
-    $this->output = ["successful" => true];
+    $this->response->sendSuccess(null);
   }
 
   public function update() {
@@ -169,21 +166,18 @@ class Teachers {
     //because the data is provided via a PUT request we cannot acces the data in the body through the $_POST variable and we have to manually parse and store it
     $keys = ["name", "teacherAvailability"];
     if (!$this->request->PUTisset($keys)) {
-      $this->output = ["successful" => false, "error" => "Please set all keys", "keys" => $keys];
-      http_response_code(400);
+      $this->response->sendError(8);
       return false;
     }
     //check selector for validity
     if (!$this->request->checkSelector()) {
-      $this->output = ["successful" => false, "error" => "Invalid selector"];
-      http_response_code(400);
+      $this->response->sendError(6);
       return false;
     }
     //check if the user has sufficient permissions
     //we cannot update every classroom so a wildcard is not permitted
     if ($_SESSION["userLVL"] < 3 || $this->selector === "*") {
-      $this->output = ["successful" => false, "error" => "Insufficient permissions"];
-      http_response_code(400);
+      $this->response->sendError(9);
       return false;
     }
 
@@ -191,7 +185,7 @@ class Teachers {
     $teacherAvailability = $_PUT["teacherAvailability"];
 
     if (gettype($teacherAvailability) !== "array" || sizeof($teacherAvailability) !== 7) {
-      $this->output = ["successful" => false, "error" => "teacherAvailability must be an array of 7 booleans"];
+      $this->response->sendError(13);
       return false;
     }
     foreach ($teacherAvailability as $n => $day) {
@@ -212,6 +206,6 @@ class Teachers {
     //parse the JSON back to an array
     $data["teacherAvailability"] = json_decode($data["teacherAvailability"]);
     $data["lastChanged"] = date('Y-m-d H:i:s');
-    $this->output = ["successful" => true, "data" => $data];
+    $this->response->sendSuccess($data);
   }
 }

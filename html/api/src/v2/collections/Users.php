@@ -91,29 +91,23 @@ class Users {
 
     if (!$data) {
       //if the selector is a wildcard return an empty array, else return an error because the GUID does not exist
-      $this->output = ($this->selector === "*") ? ["successful" => true, "data" => []] : ["successful" => false, "error" => "GUID does not exist in this collection"];
+      ($this->selector === "*") ? $this->response->sendSuccess([]) : $this->response->sendError(7);
       return true;
     }
     //if the selector is a wildcard return the array with the data, else return only the first item in the array
-    $data = ["successful" => true, "data" => ($this->selector === "*") ? $data : $data[0]];
-    $this->output = $data;
+    ($this->selector === "*") ? $this->response->sendSuccess($data) : $this->response->sendSuccess($data[0]);
+    return true;
   }
 
   public function add() {
     $keys = ["username", "password", "userLVL"];
     if (!$this->request->POSTisset($keys)) {
-    $this->output = ["successful" => false, "error" => "Please set all keys", "keys" => $keys];
-      http_response_code(400);
-      return false;
-    }
-
-    if (!is_int((int) $_POST["userLVL"])) {
-      http_response_code(400);
+    $this->response->sendError(8);
       return false;
     }
 
     $username = $_POST["username"];
-    $userLVL = $_POST["userLVL"];
+    $userLVL = (int) $_POST["userLVL"];
     $password = password_hash($_POST["password"], PASSWORD_DEFAULT);
     $lastLoginIP = "127.0.0.1";
     $GUID = $this->db->generateGUID();
@@ -122,7 +116,7 @@ class Users {
     $stmt->execute(["username" => $username]);
 
     if ($stmt->rowCount() > 0) {
-      $this->output = ["successful" => false, "error" => "Username already taken"];
+      $this->response->sendSuccess(15);
       return false;
     }
     $stmt = null;
@@ -138,24 +132,19 @@ class Users {
     ];
     $stmt->execute($data);
     $data["lastChanged"] = date('Y-m-d H:i:s');
-    $this->output = ["successful" => true, "data" => $data];
 
-    $this->output = $data;
+    $this->response->sendSuccess($data);
   }
 
   private function delete() {
     //check selector for validity
     if (!$this->request->checkSelector()) {
-
-      $this->output = ["successful" => false, "error" => "Invalid selector"];
-      http_response_code(400);
+      $this->response->sendError(6);
       return false;
     }
     //check if the user has sufficient permissions
     if ($_SESSION["userLVL"] < 3) {
-
-      $this->output = ["successful" => false, "error" => "Insufficient permissions"];
-      http_response_code(400);
+      $this->response->sendError(9);
       return false;
     }
     if ($this->selector == "*") {
@@ -167,7 +156,7 @@ class Users {
       $stmt->execute(["GUID" => $this->selector]);
     }
 
-    $this->output = ["successful" => true];
+    $this->response->sendSuccess(null);
   }
 
   public function update() {
@@ -175,21 +164,18 @@ class Users {
     //because the data is provided via a PUT request we cannot acces the data in the body through the $_POST variable and we have to manually parse and store it
     $keys = ["username", "userLVL"];
     if (!$this->request->PUTisset($keys)) {
-      $this->output = ["successful" => false, "error" => "Please set all keys", "keys" => $keys];
-      http_response_code(400);
+      $this->response->sendError(8);
       return false;
     }
     //check selector for validity
     if (!$this->request->checkSelector()) {
-      $this->output = ["successful" => false, "error" => "Invalid selector"];
-      http_response_code(400);
+      $this->response->sendError(6);
       return false;
     }
     //check if the user has sufficient permissions
     //we cannot update every classroom so a wildcard is not permitted
     if ($_SESSION["userLVL"] < 3 || $this->selector === "*") {
-      $this->output = ["successful" => false, "error" => "Insufficient permissions"];
-      http_response_code(400);
+      $this->response->sendError(9);
       return false;
     }
 
@@ -203,7 +189,7 @@ class Users {
     $stmt->execute(["username" => $username, "GUID" => $GUID]);
 
     if ($stmt->rowCount() > 0) {
-      $this->output = ["successful" => false, "error" => "Username already taken"];
+      $this->response->sendError(15);
       return false;
     }
     $stmt = null;
@@ -230,7 +216,7 @@ class Users {
       ]
     ];
     $data["data"]["lastChanged"] = date('Y-m-d H:i:s');
-    $this->output = $data;
+    $this->response->sendSuccess($data);
   }
 
 }

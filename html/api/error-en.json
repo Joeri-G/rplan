@@ -56,8 +56,8 @@
   },
   {
     "id": 11,
-    "http": 504,
-    "msg": "No action could be attached to method"
+    "http": 501,
+    "msg": "Method not supported"
   },
   {
     "id": 12,
@@ -68,5 +68,20 @@
     "id": 13,
     "http": 400,
     "msg": "teacherAvailability must be an array of 7 with only \"1\" or \"0\""
+  },
+  {
+    "id": 14,
+    "http": 400,
+    "msg": "Invalid request structure"
+  },
+  {
+    "id": 15,
+    "http": 500,
+    "msg": "Username already taken"
+  },
+  {
+    "id": 16,
+    "http": 400,
+    "msg": "collection not implemented"
   }
 ]

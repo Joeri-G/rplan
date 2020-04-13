@@ -7,13 +7,13 @@ define("acceptedMethods", ["GET", "POST", "PUT", "DELETE"]); //all the accepted 
 define("versions", ["v2"]); //all supported api versions
 define("allowedCollections", ["classes", "classrooms", "teachers", "projects", "laptops", "admin", "users", "config"]); //allowed collections
 define("tables", ["classes", "classrooms", "users", "deleted", "appointments", "projects", "teachers", "users"]);
-define("collectionException", ["icon"]);
+define("collectionException", ["admin", "conf"]);
 //start response handler
 $response = new v2\lib\ResponseHandler();
 //load error messages
 $response->loadErrors(__DIR__."/error-en.json");
 //test request on validity
-$request = new v2\lib\RequestActions($response);
+$request = new v2\lib\RequestActions();
 $request->allowedVersionPrefixes = versions;
 $request->acceptedMethods = acceptedMethods;
 $request->allowedCollections = allowedCollections;
@@ -22,7 +22,7 @@ $request->collectionException = collectionException;
 $request->init();
 
 if (!$request->verifyRequest()) {
-  $response->sendError(3);
+  $response->sendError(14);
   die();
 }
 
@@ -40,7 +40,6 @@ if (!$auth->check(3)) {
   die();
 }
 
-
 switch ($request->collection) {
   case 'classes':
     $collection = new v2\collections\Classes($response, $db, $request);
@@ -57,10 +56,13 @@ switch ($request->collection) {
   case 'projects':
     $collection = new v2\collections\Projects($response, $db, $request);
     break;
+  case 'appointments':
+    $collection = new v2\collections\Appointments($response, $db, $request);
+    break;
 
 
   default:
-    $response->sendError(2);
+    $response->sendError(16);
     die();
     break;
 }

@@ -17,12 +17,7 @@ class RequestActions {
 
   private $parts = [];
 
-  function __construct($response = null) {
-    if (is_null($response)) {
-      echo "No response object provided";
-      return false;
-    }
-    $this->response = $response;
+  function __construct() {
     $this->init();
   }
 
@@ -85,9 +80,9 @@ class RequestActions {
       $reqSplit = array_splice($reqSplit, 0, -1);
     }
     $pathSplit = explode("/", $path);
-    $reqOffset = count($pathSplit) - 2;
+    $reqOffset = count($pathSplit) - 1;
     //return the parts of the request after the api root in an array
-    //example.com/public/scripts/api/foo/bar -> ["bar", "bar"]
+    //example.com/public/scripts/api/foo/bar -> ["foo", "bar"]
     return array_splice($reqSplit, $reqOffset);
   }
 
@@ -97,7 +92,10 @@ class RequestActions {
         return false;
       }
     }
-    return ((in_array($this->collection, $this->allowedCollections) && count($this->parts) >= 2) || in_array($this->collection, $this->collectionException)) ? true : false;
+    return (
+              (in_array($this->collection, $this->allowedCollections) && count($this->parts) >= 2) ||
+              in_array($this->collection, $this->collectionException)
+            ) ? true : false;
   }
 
   public function checkVersion() {
