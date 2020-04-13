@@ -5,7 +5,7 @@ use joeri_g\palweekplanner\v2 as v2;
 //set constants
 define("acceptedMethods", ["GET", "POST", "PUT", "DELETE"]); //all the accepted HTTP Request Methods
 define("versions", ["v2"]); //all supported api versions
-define("allowedCollections", ["classes", "classrooms", "teachers", "projects", "laptops", "admin", "users", "config"]); //allowed collections
+define("allowedCollections", ["classes", "classrooms", "teachers", "projects", "laptops", "admin", "users", "config", "appointments"]); //allowed collections
 define("tables", ["classes", "classrooms", "users", "deleted", "appointments", "projects", "teachers", "users"]);
 define("collectionException", ["admin", "conf"]);
 //start response handler
