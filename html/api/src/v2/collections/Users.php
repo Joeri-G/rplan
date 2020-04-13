@@ -65,6 +65,11 @@ class Users {
       $this->response->sendError(6);
       return false;
     }
+    //users have to be admins
+    if ($_SESSION["userLVL"] < 3) {
+      $this->response->sendError(9);
+      return false;
+    }
     //statement depends on selector
     //if wildcard return all classes
     if ($this->selector === "*") {
@@ -103,6 +108,11 @@ class Users {
     $keys = ["username", "password", "userLVL"];
     if (!$this->request->POSTisset($keys)) {
     $this->response->sendError(8);
+      return false;
+    }
+    //users have to be admins
+    if ($_SESSION["userLVL"] < 3) {
+      $this->response->sendError(9);
       return false;
     }
 
