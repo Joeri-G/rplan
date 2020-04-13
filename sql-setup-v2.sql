@@ -34,7 +34,7 @@ planner -> week
 SQL:
 */
 CREATE TABLE `appointments` (
-  `starttime` timestamp(6) NOT NULL COMMENT 'start timestamp',
+  `start` timestamp(6) NOT NULL COMMENT 'start timestamp',
   `duration` int(11) NOT NULL COMMENT 'duration in minures',
   `teacher1` varchar(16) NOT NULL,
   `teacher2` varchar(16) NOT NULL,
