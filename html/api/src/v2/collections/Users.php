@@ -73,22 +73,10 @@ class Users {
     //statement depends on selector
     //if wildcard return all classes
     if ($this->selector === "*") {
-      //is user is admin return more data
-      if ($_SESSION["userLVL"] >= 3) {
-        $stmt = $this->conn->prepare("SELECT username, userLVL, lastLoginIP, lastLoginTime, lastChanged, GUID FROM users");
-      }
-      else {
-        $stmt = $this->conn->prepare("SELECT username, userLVL, GUID FROM users");
-      }
+      $stmt = $this->conn->prepare("SELECT username, userLVL, lastLoginIP, lastLoginTime, lastChanged, GUID FROM users ORDER BY userLVL DESC, username");
     }
     else {
-      //is user is admin return more data
-      if ($_SESSION["userLVL"] >= 3) {
-        $stmt = $this->conn->prepare("SELECT username, userLVL, lastLoginIP, lastLoginTime, lastChanged, GUID FROM users WHERE GUID = :id LIMIT 1");
-      }
-      else {
-        $stmt = $this->conn->prepare("SELECT username, userLVL, GUID FROM users WHERE GUID = :id LIMIT 1");
-      }
+      $stmt = $this->conn->prepare("SELECT username, userLVL, lastLoginIP, lastLoginTime, lastChanged, GUID FROM users WHERE GUID = :id LIMIT 1");
       $stmt->bindParam("id", $this->selector);
     }
     $stmt->execute();

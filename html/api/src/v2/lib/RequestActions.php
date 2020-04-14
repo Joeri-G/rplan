@@ -109,9 +109,13 @@ class RequestActions {
   }
 
   public function checkSelector() {
-    if (!preg_match("^(\{){0,1}[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}(\}){0,1}^", $this->selector) && $this->selector !== "*") {
+    if (!$this->isValidGUID() && $this->selector !== "*") {
       return false;
     }
     return true;
+  }
+
+  public function isValidGUID() {
+    return preg_match("^(\{){0,1}[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}(\}){0,1}^", $this->selector);
   }
 }

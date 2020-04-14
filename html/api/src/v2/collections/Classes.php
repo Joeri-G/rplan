@@ -71,19 +71,19 @@ class Classes {
     if ($this->selector === "*") {
       //is user is admin return more data
       if ($_SESSION["userLVL"] >= 3) {
-        $stmt = $this->conn->prepare("SELECT year, name, userCreate, lastChanged, GUID FROM classes");
+        $stmt = $this->conn->prepare("SELECT year, name, userCreate, lastChanged, GUID FROM classes ORDER BY name");
       }
       else {
-        $stmt = $this->conn->prepare("SELECT year, name, GUID FROM classes");
+        $stmt = $this->conn->prepare("SELECT year, name, GUID FROM classes ORDER BY name");
       }
     }
     elseif ($this->selector === "year") {
       //year selector, return all classes where the year is equal to the 2nd selector
       if ($_SESSION["userLVL"] >= 3) {
-        $stmt = $this->conn->prepare("SELECT year, name, userCreate, lastChanged, GUID FROM classes WHERE year = :year");
+        $stmt = $this->conn->prepare("SELECT year, name, userCreate, lastChanged, GUID FROM classes WHERE year = :year ORDER BY name");
       }
       else {
-        $stmt = $this->conn->prepare("SELECT year, name, GUID FROM classes WHERE year = :year");
+        $stmt = $this->conn->prepare("SELECT year, name, GUID FROM classes WHERE year = :year ORDER BY name");
       }
       $stmt->bindParam("year", $this->selector2);
     }

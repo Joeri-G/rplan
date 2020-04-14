@@ -71,10 +71,10 @@ class Teachers {
     if ($this->selector === "*") {
       //is user is admin return more data
       if ($_SESSION["userLVL"] >= 3) {
-        $stmt = $this->conn->prepare("SELECT name, teacherAvailability, lastChanged, GUID FROM teachers");
+        $stmt = $this->conn->prepare("SELECT name, teacherAvailability, lastChanged, GUID FROM teachers ORDER BY name");
       }
       else {
-        $stmt = $this->conn->prepare("SELECT name, teacherAvailability, GUID FROM teachers");
+        $stmt = $this->conn->prepare("SELECT name, teacherAvailability, GUID FROM teachers ORDER BY name");
       }
     }
     else {

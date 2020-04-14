@@ -71,10 +71,10 @@ class Projects {
     if ($this->selector === "*") {
       //is user is admin return more data
       if ($_SESSION["userLVL"] >= 3) {
-        $stmt = $this->conn->prepare("SELECT projectTitle, projectCode, projectDescription, projectInstruction, responsibleTeacher, user, lastChanged, IP, GUID FROM projects");
+        $stmt = $this->conn->prepare("SELECT projectTitle, projectCode, projectDescription, projectInstruction, responsibleTeacher, user, lastChanged, IP, GUID FROM projects ORDER BY projectTitle");
       }
       else {
-        $stmt = $this->conn->prepare("SELECT projectTitle, projectCode, projectDescription, projectInstruction, responsibleTeacher, GUID FROM projects");
+        $stmt = $this->conn->prepare("SELECT projectTitle, projectCode, projectDescription, projectInstruction, responsibleTeacher, GUID FROM projects ORDER BY projectTitle");
       }
     }
     else {

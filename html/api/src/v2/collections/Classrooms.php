@@ -71,10 +71,10 @@ class Classrooms {
     if ($this->selector === "*") {
       //is user is admin return more data
       if ($_SESSION["userLVL"] >= 3) {
-        $stmt = $this->conn->prepare("SELECT classroom, userCreate, lastChanged, GUID FROM classrooms");
+        $stmt = $this->conn->prepare("SELECT classroom, userCreate, lastChanged, GUID FROM classrooms ORDER BY classroom");
       }
       else {
-        $stmt = $this->conn->prepare("SELECT classroom, GUID FROM classrooms");
+        $stmt = $this->conn->prepare("SELECT classroom, GUID FROM classrooms ORDER BY classroom");
       }
     }
     else {
