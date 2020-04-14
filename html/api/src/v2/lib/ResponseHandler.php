@@ -8,6 +8,8 @@ class ResponseHandler {
   private $error;
   //default response
   private $response;
+  private $errorfile = __DIR__."/error.json";
+  private $loadedErrors = false;
   function __construct() {
     $this->loadErrors();
     $this->response = [
@@ -17,9 +19,11 @@ class ResponseHandler {
     ];
   }
 
-  public function loadErrors(string $path = null) {
-    if ($path === null || !file_exists($path)) $path = __DIR__."/error.json";
-    $errorfile = json_decode(file_get_contents($path));
+  private function loadErrors() {
+    if ($this->loadedErrors) {
+      return false;
+    }
+    $errorfile = json_decode(file_get_contents($this->errorfile));
     $this->error = [];
 
     foreach ($errorfile as $n => $err) {
@@ -29,9 +33,23 @@ class ResponseHandler {
         "msg" => $err->msg
       ];
     }
+    $this->loadedErrors = true;
+    return true;
+  }
+
+  //we dont want to load the error file if nothing goes wrong in order to save memory
+  public function setErrorFile(string $path = null, bool $forceLoad = false) {
+    if ($path === null || !file_exists($path)) $path = __DIR__."/error.json";
+    if ($this->errorfile === "path") return true;
+    $this->errorfile = $path;
+    $this->loadedErrors = false;
+    if ($forceLoad) $this->loadErrors();
+    return true;
   }
 
   public function sendError(int $err = 0) {
+    //if the errors have not been loaded yet, load them
+    if (!$this->loadedErrors) $this->loadErrors();
     if (!isset($this->error[$err])) $err = 0;
     $this->response = [
       "succesfull" => false,

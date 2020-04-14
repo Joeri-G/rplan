@@ -11,7 +11,7 @@ define("collectionException", ["conf"]);
 //start response handler
 $response = new v2\lib\ResponseHandler();
 //load error messages
-$response->loadErrors(__DIR__."/error-en.json");
+$response->setErrorFile(__DIR__."/error-en.json");
 //test request on validity
 $request = new v2\lib\RequestActions();
 $request->allowedVersionPrefixes = versions;
