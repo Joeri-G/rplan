@@ -88,5 +88,15 @@
     "id": 17,
     "http": 400,
     "msg": "Selector must be one date (Y-m-d), two dates separated by a slash or a GUID of an already existing appointment"
+  },
+  {
+    "id": 18,
+    "http": 400,
+    "msg": "Max range is 30 days"
+  },
+  {
+    "id": 19,
+    "http": 400,
+    "msg": "Smallest date must come first"
   }
 ]
