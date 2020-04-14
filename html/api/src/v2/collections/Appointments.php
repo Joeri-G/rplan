@@ -65,47 +65,73 @@ class Appointments {
     //we can only list appointments in a specific timeframe to prevent complete chaos
     if ($this->validateDate($this->selector)) {
       //if a second date is set use that date as the end date
-      //will come later
       $enddate = (isset($this->selector2)) ? $this->selector2 : null;
-      $data = $this->listTimestamp($this->selector, $enddate);
+      return $this->listTimestamp($this->selector, $enddate);
     }
-    elseif ($this->request->checkSelector()) {
-      $data = $this->listGUID($this->selector);
+    elseif ($this->request->isValidGUID()) {
+      return $this->listGUID($this->selector);
     }
     else {
       $this->response->sendError(17);
       return false;
     }
-    $this->response->sendSuccess($data);
   }
 
   private function listTimestamp(string $start = "2000-01-01", string $end = null) {
-    //1 week = 60 * 60 * 24 * 7 = 604800
-    $enddate = strtotime($start) + 604800;
-    $enddate = date("Y-m-d", $enddate);
-    //if an end date is supplied
-    //make sure the range is not more than one month
-    //60 * 60 * 24 * 30 = 2592000
-    if (!is_null($end) && $this->validateDate($end) && (strtotime($end) - strtotime($start) <= 2592000)) {
-      $enddate = $end;
+    //determine wether we need to list the appointments of one day or a range of days
+    if (!is_null($end) && $this->validateDate($end)) {
+      //60 * 60 * 24 * 30 = 2592000
+      if (strtotime($end) - strtotime($start) > 2592000) {
+        $this->response->sendError(18);
+        return false;
+      }
+      if (strtotime($end) - strtotime($start) <= 0) {
+        $this->response->sendError(19);
+        return false;
+      }
+
+      $stmt = $this->conn->prepare(
+        "SELECT start, duration, teacher1, teacher2, class, classroom1, classroom2, project, notes, GUID
+        FROM appointments
+        WHERE DATE(start) >= :start AND DATE(start) <= :end
+        ORDER BY start"
+      );
+      $stmt->execute([
+        "start" => $start,
+        "end" => $end
+      ]);
     }
-
-    $stmt = $this->conn->prepare(
-      "SELECT start, duration, teacher1, teacher2, class, classroom1, classroom2, project, notes, GUID
-      FROM appointments
-      WHERE DATE(start) >= :start AND DATE(start) <= :end
-      "
-    );
-    $stmt->execute([
-      "start" => $start,
-      "end" => $enddate
-    ]);
-
-    return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    else {
+      $stmt = $this->conn->prepare(
+        "SELECT start, duration, teacher1, teacher2, class, classroom1, classroom2, project, notes, GUID
+        FROM appointments
+        WHERE DATE(start) = :start
+        ORDER BY start"
+      );
+      $stmt->execute([
+        "start" => $start,
+      ]);
+    }
+    $data = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    $this->response->sendSuccess($data);
+    return true;
   }
 
   private function listGUID(string $GUID) {
-    return ["working on it"];
+    $stmt = $this->conn->prepare(
+      "SELECT start, duration, teacher1, teacher2, class, classroom1, classroom2, project, notes
+      FROM appointments
+      WHERE GUID = :GUID"
+    );
+    $stmt->execute(["GUID" => $GUID]);
+    $data = $stmt->fetch(\PDO::FETCH_ASSOC);
+    if (!$data) {
+      $this->response->sendError(7);
+      return false;
+    }
+    $data["GUID"] = $GUID;
+    $this->response->sendSuccess($data);
+    return true;
   }
 
   private function add() {
