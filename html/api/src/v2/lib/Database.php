@@ -42,6 +42,7 @@ class Database {
       $this->response->sendError(2);
       die();
     }
+    $this->db_name = $data["db"];
     $this->username = ($data["db_user"] !== "" && !is_null($data["db_user"])) ? $data["db_user"] : $this->username;
     $this->password = ($data["db_password"] !== "" && !is_null($data["db_password"])) ? $data["db_password"] : $this->password;
     $this->db_host = ($data["db_host"] !== "" && !is_null($data["db_host"])) ? $data["db_host"] : $this->db_host;
