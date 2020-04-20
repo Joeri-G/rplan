@@ -52,7 +52,7 @@
   {
     "id": 10,
     "http": 401,
-    "msg": "Please Authenticate Yourself Through Eiter The Login Page Or The Authentication Header"
+    "msg": "Please authenticate yourself through the login page, the authentication header or an API key"
   },
   {
     "id": 11,
