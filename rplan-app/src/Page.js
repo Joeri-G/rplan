@@ -33,10 +33,17 @@ export default class Home extends Component {
     // Update state with new data.
     // Re-render our component.
     let newUserState = await API.get('/login').then((response) => { //on success
-      console.log("User is logged in");
+      if (response.data.succesfull) {
+        console.log("User is logged in");
+        return {
+          loggedin: true,
+          userdata: response.data.response
+        };
+      }
+      console.log("User is not logged in");
       return {
-        loggedin: true,
-        userdata: response.body.response
+        logged: false,
+        userdata: null
       }
     }).catch(
       (error) => { //on error
@@ -44,6 +51,7 @@ export default class Home extends Component {
           // put an error handler here in a future release
         }
         console.log("User is not logged in");
+        console.log(error);
         return {
           loggedin: false,
           userdata: null
