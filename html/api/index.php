@@ -37,10 +37,6 @@ if (!$db->connect($errmode = 2)) {
 
 $auth = new v2\lib\authCheck($response, $db);
 if (!$auth->check()) {
-  if ($request->collection === "login") {
-    new v2\collections\Login($response, $db, $request);
-    die();
-  }
   if ($request->method === "OPTIONS") die();
   header("WWW-Authenticate: Basic ream=\"Authentication is required to use this API\"");
   $response->sendError(10);
