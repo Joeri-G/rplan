@@ -1,0 +1,23 @@
+/*
+ * Too tired to deal with this broken css right now
+ * might fix it later
+ */
+footer {
+  text-align: center;
+  color: var(--page-static-components-text-color);
+  background: var(--page-static-components-bg-color);
+  height: 100px;
+  display: table-row;
+  width: 100%;
+}
+
+footer > div {
+  height: 100px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+footer:hover {
+  background: #333;
+}

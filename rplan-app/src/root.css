@@ -1,0 +1,16 @@
+/*
+This file contains page wide css settings
+ */
+:root {
+  --main-bg-color: #FFECA1;
+  --main-text-color: #000;
+
+  --second-bg-color: #dce3ff;
+  --second-text-color: #000;
+
+  --third-bg-color: #ffe7dc;
+  --third-text-color: #000;
+
+  --page-static-components-bg-color: #565656;
+  --page-static-components-text-color: #fff;
+}

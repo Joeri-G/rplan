@@ -1,0 +1,53 @@
+/* 3.2 */
+/* .customDropdownButton {
+  display: inline;
+  text-align: left;
+  margin: 2px;
+}
+
+.customDropdownButton input, .customDropdownButton button {
+  margin: 0;
+  border-radius: 0;
+  padding: 8px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.customDropdownButton input[type=search]:hover, .customDropdownButton input[type=search]:focus {
+  background: #bbb;
+  box-shadow: none;
+}
+
+.customDropdownButton input[type=search] {
+  display: block;
+  width: 100%;
+  padding: 12px;
+  font-size: 16px;
+  cursor: text;
+}
+*/
+.customDropdownButtonOptions {
+  box-shadow: 0 0 4px 4px rgba(50,50,50,0.5);
+  display: none;
+}
+
+.customDropdownButtonOptions {
+  z-index: 4;
+  max-height: 600px;
+  overflow: auto;
+  position: absolute;
+  width: 200px;
+  font-size: 16px;
+  display: none;
+  background: #ccc;
+}
+
+.customDropdownButton input, .customDropdownButton button {
+  cursor: pointer;
+  width: 100%;
+  display: block;
+}
+
+.customDropdownButton input[type=search] {
+  cursor: text;
+}
