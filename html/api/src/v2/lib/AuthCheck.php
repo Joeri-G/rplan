@@ -36,7 +36,7 @@ class AuthCheck {
       return false;
     }
     //update session data
-    $stmt = $this->conn->prepare("SELECT username, userLVL FROM users WHERE GUID = :GUID");
+    $stmt = $this->conn->prepare("SELECT username, userLVL, api_key FROM users WHERE GUID = :GUID");
     $stmt->execute(["GUID" => $_SESSION["GUID"]]);
     //check if user has been found
 
@@ -57,6 +57,7 @@ class AuthCheck {
     $_SESSION['username'] = $data["username"];
     $_SESSION['userLVL'] = $data["userLVL"];
     $_SESSION['GUID'] = $_SESSION["GUID"];
+    $_SESSION['api_key'] = $data["api_key"];
     $this->userLVL = $data["userLVL"];
     return true;
   }
@@ -76,7 +77,7 @@ class AuthCheck {
     }
 
     //sql query, select data where username = $username
-    $stmt = $this->conn->prepare("SELECT password, userLVL, GUID FROM users WHERE username = :username");
+    $stmt = $this->conn->prepare("SELECT password, api_key, userLVL, GUID FROM users WHERE username = :username");
     $stmt->execute(["username" => $username]);
     //check if user has been found
     if ($stmt->rowCount() !== 1) {
@@ -111,29 +112,82 @@ class AuthCheck {
     $_SESSION['userLVL'] = $data["userLVL"];
     $_SESSION['username'] = $username;
     $_SESSION['GUID'] = $data["GUID"];
+    $_SESSION['api_key'] = $data["api_key"];
     $this->userLVL = $data["userLVL"];
 
     return true;
   }
 
-  public function check($methods = 3) {
-    switch ($methods) {
-      case 1:
-        return $this->checkSession();
-        break;
-      case 2:
-        return$this->checkHeader();
-        break;
-      case 3:
-        if ($this->checkHeader() || $this->checkSession()) {
-          return true;
-        }
-        return false;
-        break;
-      default:
-        return false;
-        break;
+  /**
+ * Get header Authorization
+ * */
+  function getAuthorizationHeader() {
+    $headers = null;
+    if (isset($_SERVER['Authorization'])) {
+      $headers = trim($_SERVER["Authorization"]);
     }
+    else if (isset($_SERVER['HTTP_AUTHORIZATION'])) { //Nginx or fast CGI
+      $headers = trim($_SERVER["HTTP_AUTHORIZATION"]);
+    } elseif (function_exists('apache_request_headers')) {
+      $requestHeaders = apache_request_headers();
+      // Server-side fix for bug in old Android versions (a nice side-effect of this fix means we don't care about capitalization for Authorization)
+      $requestHeaders = array_combine(array_map('ucwords', array_keys($requestHeaders)), array_values($requestHeaders));
+      //print_r($requestHeaders);
+      if (isset($requestHeaders['Authorization'])) {
+        $headers = trim($requestHeaders['Authorization']);
+      }
+    }
+    return $headers;
+  }
+  /**
+  * get access token from header
+  * */
+  function getBearerToken() {
+    $headers = $this->getAuthorizationHeader();
+    // HEADER: Get the access token from the header
+    if (!empty($headers)) {
+      if (preg_match('/Bearer\s(\S+)/', $headers, $matches)) {
+        return $matches[1];
+      }
+    }
+    return null;
+  }
 
+  private function checkBearerToken() {
+    // make sure a bearere token is provided
+    $token = $this->getBearerToken();
+    if (is_null($token)) return false;
+    $stmt = $this->conn->prepare('SELECT username, userLVL, GUID FROM users WHERE api_key = :key');
+    $stmt->execute([
+      'key' => $token
+    ]);
+    //check if user has been found
+    if ($stmt->rowCount() !== 1) {
+      return false;
+    }
+    $data = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+    $_SESSION[$this->loggedinkey] = true;
+    $_SESSION['username'] = $data["username"];
+    $_SESSION['userLVL'] = $data["userLVL"];
+    $_SESSION['GUID'] = $data["GUID"];
+    $_SESSION['api_key'] = $token;
+    $this->userLVL = $data["userLVL"];
+
+    //update ip
+    $stmt = null;
+    $stmt = $this->conn->prepare("UPDATE users SET lastLoginTime = current_timestamp, lastLoginIP = :ip WHERE GUID = :GUID");
+    $stmt->execute(
+      ["ip" => $_SERVER['REMOTE_ADDR'],
+      "GUID" => $_SESSION["GUID"]]
+    );
+    return true;
+  }
+
+  public function check() {
+  if ($this->checkHeader() || $this->checkSession() || $this->checkBearerToken()) {
+      return true;
+    }
+    return false;
   }
 }

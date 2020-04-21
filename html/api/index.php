@@ -41,6 +41,7 @@ if (!$auth->check()) {
     new v2\collections\Login($response, $db, $request);
     die();
   }
+  if ($request->method === "OPTIONS") die();
   header("WWW-Authenticate: Basic ream=\"Authentication is required to use this API\"");
   $response->sendError(10);
   die();
@@ -65,9 +66,9 @@ switch ($request->collection) {
   case 'appointments':
     new v2\collections\Appointments($response, $db, $request);
     break;
-  // case 'login':
-  //   new v2\collections\Login($response, $db, $request);
-  //   break;
+  case 'login':
+    new v2\collections\Userdata($response, $db, $request);
+    break;
   case 'userdata':
     new v2\collections\Userdata($response, $db, $request);
     break;
