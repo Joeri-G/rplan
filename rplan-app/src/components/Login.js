@@ -46,8 +46,10 @@ export default class Login extends Component {
         username: resp.username
       }
       // set locatlstorage
-      localStorage.api_key = userdata.api_key;
+      localStorage.api_key = resp.api_key;
       this.props.updateLogin(true, userdata);
+      // reload (quick fix for defaultheaders not updating)
+      window.location.reload(false);
     }).catch((error) => { // error
       this.incorrect();
     });

@@ -9,6 +9,9 @@
 }
 
 .viewWeek {
+}
+
+.viewWeek > .days {
   margin: 2em auto;
   display: grid;
   grid-template-columns: repeat(5, 1fr);
@@ -25,6 +28,7 @@
   position: absolute;
   display: block;
   width: calc(var(--main-width) / 5 - 1em); /* some complex css to make sure the appointment is the same size as the parent */
+  margin: 0 0.5em;
   z-index: 0;
   background: var(--appointment-bg-color);
 }

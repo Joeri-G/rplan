@@ -92,7 +92,7 @@ class Appointments {
       if ($this->request->isValidGUID($this->selector3)) {
         // Return daterange with GUID
         $enddate = (isset($this->selector2)) ? $this->selector2 : null;
-        $this->listTimestampGUID($this->selector, $enddate);
+        $this->listTimestampGUID($this->selector, $enddate, $this->selector3);
         return true;
       }
       $enddate = (isset($this->selector2)) ? $this->selector2 : null;
@@ -102,26 +102,45 @@ class Appointments {
   }
 
   private function listTimestampGUID(string $start = "2000-01-01", string $end = "2000-01-01", string $GUID = null) {
-    if (!$this->validateDate($start) || !$this->validateDate($end) || $this->request->isValidGUID($GUID)) {
+    if (!$this->validateDate($start) || !$this->validateDate($end) || !$this->request->isValidGUID($GUID)) {
+      var_dump();
       $this->response->sendError(20);
       return false;
     }
     // check if a filter has been given else, look in every field
-    if (!isset($_GET['f']) || !in_array($_GET['f'], ['class', 'classroom', 'project', 'teacher'])) {
+    if (!isset($_GET['f']) || !in_array($_GET['f'], ['class', 'classroom', 'project', 'teacher', 'GUID'])) {
       $stmt = $this->conn->prepare(
-        "SELECT start, duration, teacher1, teacher2, class, classroom1, classroom2, project, notes, GUID
+        "SELECT start, endstamp, teacher1, teacher2, class, classroom1, classroom2, project, notes, GUID
         FROM appointments
         WHERE DATE(start) >= :start AND DATE(start) <= :end AND (
-          teacher1 = :g OR teacher2 = :g OR teacher1 = :g OR class = :g OR classroom1 = :g OR classroom2 = :g OR project = :g
+          teacher1 = :g OR teacher1 = :g OR teacher2 = :g OR class = :g OR classroom1 = :g OR classroom2 = :g OR project = :g OR GUID = :g
         ) ORDER BY start"
       );
     }
     else {
-      $f = $_GET['f'];
-      $stmt = $this->conn->prepare( // this is safe-ish since we checked $f against a list of known-safe values
-        "SELECT start, duration, teacher1, teacher2, class, classroom1, classroom2, project, notes, GUID
+      switch ($_GET['f']) {
+        case 'class':
+          $filter = 'class = :g';
+          break;
+        case 'classroom':
+          $filter = 'classroom1 = :g OR classroom2';
+          break;
+        case 'project':
+          $filter = 'project = :g';
+          break;
+        case 'teacher':
+          $filter = 'teacher1 = :g OR teacher2 = :g';
+          break;
+        case 'GUID':
+          $filter = 'GUID = :g';
+          break;
+        default:
+          break;
+      }
+      $stmt = $this->conn->prepare( // this is safe-ish since we checked $filter against a list of known-safe values
+        "SELECT start, endstamp, teacher1, teacher2, class, classroom1, classroom2, project, notes, GUID
         FROM appointments
-        WHERE DATE(start) >= :start AND DATE(start) <= :end AND $f = :g
+        WHERE DATE(start) >= :start AND DATE(start) <= :end AND ($filter)
         ORDER BY start"
       );
     }
@@ -130,7 +149,7 @@ class Appointments {
       "start" => $start,
       "end" => $end
     ]);
-    $data = $stmt->fetchAll(\FETCH_ASSOC);
+    $data = $stmt->fetchAll(\PDO::FETCH_ASSOC);
     $this->response->sendSuccess($data);
   }
 
@@ -148,7 +167,7 @@ class Appointments {
       }
 
       $stmt = $this->conn->prepare(
-        "SELECT start, duration, teacher1, teacher2, class, classroom1, classroom2, project, notes, GUID
+        "SELECT start, endstamp, teacher1, teacher2, class, classroom1, classroom2, project, notes, GUID
         FROM appointments
         WHERE DATE(start) >= :start AND DATE(start) <= :end
         ORDER BY start"
@@ -160,7 +179,7 @@ class Appointments {
     }
     else {
       $stmt = $this->conn->prepare(
-        "SELECT start, duration, teacher1, teacher2, class, classroom1, classroom2, project, notes, GUID
+        "SELECT start, endstamp, teacher1, teacher2, class, classroom1, classroom2, project, notes, GUID
         FROM appointments
         WHERE DATE(start) = :start
         ORDER BY start"
@@ -176,7 +195,7 @@ class Appointments {
 
   private function listGUID(string $GUID) {
     $stmt = $this->conn->prepare(
-      "SELECT start, duration, teacher1, teacher2, class, classroom1, classroom2, project, notes
+      "SELECT start, endstamp, teacher1, teacher2, class, classroom1, classroom2, project, notes
       FROM appointments
       WHERE GUID = :GUID"
     );

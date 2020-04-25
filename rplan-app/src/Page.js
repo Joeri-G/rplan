@@ -17,15 +17,14 @@ export default class Home extends Component {
 
   render() {
     return (
-          <React.Fragment>
-            <Nav />
-            {
-              // if the user isn't loggedin show the login screen
-              this.state.loggedin ? <App userdata={this.state.userdata} /> : <Login updateLogin={this.updateLogin} />
-            }
-            <Footer />
-          </React.Fragment>
-        )
+      <React.Fragment>
+        <Nav />
+        {
+          // if the user isn't loggedin show the login screen
+          this.state.loggedin ? <App userdata={this.state.userdata} /> : <Login updateLogin={this.updateLogin} />
+        }
+        <Footer />
+      </React.Fragment>)
   }
 
   async componentDidMount() {

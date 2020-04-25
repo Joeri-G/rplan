@@ -6,7 +6,8 @@ export default class ViewWeek extends Component {
     super(props);
     this.state = {
       currentdate: new Date(),
-      startdate: getNextDayOfWeek(new Date(), 1)
+      startdate: getNextDayOfWeek(new Date(), 1),
+      target: '17c7d684-cda2-41ed-924d-e58fa7282571'
     };
   }
 
@@ -22,8 +23,8 @@ export default class ViewWeek extends Component {
   render() {
     return (
       <React.Fragment>
-        <Datepicker dateCallback={null} />
-        <Calendar startdate={this.state.startdate} currentdate={this.state.currentdate} />
+        <Datepicker dateCallback={null} selectorCallback={null} />
+        <Calendar startdate={this.state.startdate} currentdate={this.state.currentdate} target={this.state.target} />
       </React.Fragment>
     );
   }
@@ -33,7 +34,7 @@ class Datepicker extends Component {
   render() {
     return (
       <section className="datepicker">
-        <h1>Datepicker</h1>
+        <h1>Datepicker, Class/Teacher And Settings</h1>
       </section>
     );
   }
@@ -43,95 +44,140 @@ class Calendar extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      startdate: this.props.startdate,
-      startdatestring: formatDate(this.props.startdate),
-      enddate: getNextDayOfWeek(this.props.startdate, 5),
-      enddatestring: formatDate(getNextDayOfWeek(this.props.startdate, 5))
+      appointments: []
     };
   }
 
   async componentDidMount() {
-    API.get(`/appointments/${this.state.startdatestring}/${this.state.enddatestring}`).then((response) => {
-      console.log(1);
+    let startdatestring = formatDate(this.props.startdate);
+    let enddatestring = formatDate(getNextDayOfWeek(this.props.startdate, 5));
+    API.get(`/appointments/${startdatestring}/${enddatestring}/${this.props.target}`).then((response) => {
+      if (response.data.succesfull) this.setState({appointments: response.data.response});
     }).catch((error) => {
-      console.log(2);
+      // blah blah, error handling and stuff
     });
   }
 
+  calcPxOffset = (start, end) => {
+    let startHour = 8;
+    let endHour = 18;
+    let dayheight = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--day-height').slice(0, -2), 10);
+
+    start = MYSQLdatetimeToDate(start);
+    end = MYSQLdatetimeToDate(end);
+
+    let startmin =  ((start.getHours() - startHour) * 60) + start.getMinutes()
+    let endmin = ((end.getHours() - startHour) * 60) + end.getMinutes();
+
+    let pxm = dayheight / ((endHour-startHour) * 60 ) // pixels per minute
+
+    let duration = Math.floor((endmin-startmin) * pxm);
+
+    let offset = (startmin) * pxm;
+
+    return {start: offset, duration: duration};
+  }
+
+  parseday = (ap) => {
+    let pxValues = this.calcPxOffset(ap.start, ap.endstamp);
+    let data = {
+      startTimestamp: ap.start,
+      endTimestamp: ap.endstamp,
+      start: pxValues.start,
+      duration: pxValues.duration,
+      GUID: ap.GUID
+    };
+    return data;
+  }
 
   render() {
-    let appointments = [
-      {s: 100, d: 200, id: "063c7451-5e78-4e2f-87be-5c62aa6193c5"},
-      {s: 700, d: 150, id: "e5029f97-b859-4e3a-a0b4-724463c5d1bb"}
-    ];
+    let appointments = [ [], [], [], [], [] ];
+    let day = 1;
+    let start, ap;
+    for (var i = 0; i < this.state.appointments.length; i++) {
+      ap = this.state.appointments[i];
+      start = new Date(ap.start.slice(0, 10)); // first 10 chars are an ISO compatible date string
+      // check if the date is equal to the day date
+      if (Date.parse(start) === Date.parse(getNextDayOfWeek(start, day + 1))) day++;
+      appointments[day-1].push(this.parseday(ap));
+      if (day > 6) break;
+    }
     return (
       <main className="viewWeek">
-        <Day appointments={appointments} />
-        <Day appointments={appointments} />
-        <Day appointments={appointments} />
-        <Day appointments={appointments} />
-        <Day appointments={appointments} />
+        <div className="days">
+          <Day appointments={appointments[0]} day={formatDate(getNextDayOfWeek(this.props.startdate, 1))} />
+          <Day appointments={appointments[1]} day={formatDate(getNextDayOfWeek(this.props.startdate, 2))} />
+          <Day appointments={appointments[2]} day={formatDate(getNextDayOfWeek(this.props.startdate, 3))} />
+          <Day appointments={appointments[3]} day={formatDate(getNextDayOfWeek(this.props.startdate, 4))} />
+          <Day appointments={appointments[4]} day={formatDate(getNextDayOfWeek(this.props.startdate, 5))} />
+        </div>
       </main>
     );
   }
 }
 
 class Day extends Component {
-  constructor(props) {
-    super(props);
-    this.dayheight = getComputedStyle(document.documentElement).getPropertyValue('--day-height').slice(0, -2);
-    this.dayheight = parseInt(this.dayheight, 10);
+  click = () => {
+    alert(`You just pressed day ${this.props.day}`);
   }
-
   render() {
+    // this is a quick hack to allow for different onClicks
     return (
-      <div className="day">
-        {this.props.appointments.map((appointment) => {
-          return <Appointment key={appointment.id} data={appointment} />
-        })}
-      </div>
+      <section>
+        <div className="dayCover">
+          {this.props.appointments.map((appointment) => {
+            return <Appointment key={appointment.GUID} data={appointment} />
+          })}
+        </div>
+        <div className="day" onClick={this.click}></div>
+      </section>
     );
   }
 }
 
 class Appointment extends Component {
-  constructor(props) {
-    super(props);
-    this.start = this.props.data.s;
-    this.duration = this.props.data.d;
-  }
-
   randomInt = (min, max) => {
     return Math.floor(Math.random() * (max - min + 1)) + min;
   }
 
+  click = () => {
+    alert(`You just pressed appointment ${this.props.data.GUID}`);
+  }
+
   render() {
     this.style = {
-      marginTop: this.start.toString()+"px",
-      height: this.duration.toString()+"px"
+      marginTop: this.props.data.start.toString()+"px",
+      height:  this.props.data.duration.toString()+"px"
     };
 
     return (
-      <div className="appointment" style={this.style}></div>
+      <div className="appointment" style={this.style} onClick={this.click}></div>
     );
   }
 }
 
 // https://codereview.stackexchange.com/a/33532
 function getNextDayOfWeek(date, dayOfWeek) {
-    // Code to check that date and dayOfWeek are valid left as an exercise ;)
-    var resultDate = new Date(date.getTime());
-    resultDate.setDate(date.getDate() + (7 + dayOfWeek - date.getDay()) % 7);
-    return resultDate;
+  var resultDate = new Date(date.getTime());
+  resultDate.setDate(date.getDate() + (7 + dayOfWeek - date.getDay()) % 7);
+  return resultDate;
 }
 
 function formatDate(d) {
-    let month = '' + (d.getMonth() + 1),
-        day = '' + d.getDate(),
-        year = d.getFullYear();
+  let month = '' + (d.getMonth() + 1),
+      day = '' + d.getDate(),
+      year = d.getFullYear();
 
-    if (month.length < 2) month = '0' + month;
-    if (day.length < 2) day = '0' + day;
+  if (month.length < 2) month = '0' + month;
+  if (day.length < 2) day = '0' + day;
 
-    return [year, month, day].join('-');
+  return [year, month, day].join('-');
+}
+
+// https://itnext.io/create-date-from-mysql-datetime-format-in-javascript-912111d57599
+function MYSQLdatetimeToDate(dateTime) {
+  let dateTimeParts= dateTime.split(/[- :]/); // regular expression split that creates array with: year, month, day, hour, minutes, seconds values
+  dateTimeParts[1]--; // monthIndex begins with 0 for January and ends with 11 for December so we need to decrement by one
+
+  return new Date(...dateTimeParts); // our Date object
 }

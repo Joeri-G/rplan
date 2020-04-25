@@ -35,14 +35,14 @@ SQL:
 */
 CREATE TABLE `appointments` (
   `start` timestamp(6) NOT NULL COMMENT 'start timestamp',
-  `duration` int(11) NOT NULL COMMENT 'duration in minures',
+  `endstamp`  timestamp(6) NOT NULL COMMENT 'endtimestamp',
   `teacher1` varchar(36) NOT NULL,
   `teacher2` varchar(36) NOT NULL,
   `class` varchar(36) NOT NULL,
   `classroom1` varchar(36) NOT NULL,
   `classroom2` varchar(36) NOT NULL,
   `laptops` int(4) NOT NULL COMMENT 'laptops',
-  `pro` varchar(36) NOT NULL COMMENT 'projectCode',
+  `project` varchar(36) NOT NULL COMMENT 'projectCode',
   `notes` varchar(256) NOT NULL COMMENT 'notes',
   `USER` varchar(36) NOT NULL COMMENT 'user who added entry',
   `lastChanged` timestamp(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
