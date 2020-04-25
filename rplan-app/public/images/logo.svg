@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1920" viewBox="0 0 1920 1920">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: none;
+        stroke: #e8e8e8;
+        stroke-width: 23.79px;
+      }
+      .cls-2 {
+        fill: #ffec9f;
+      }
+      .cls-3 {
+        fill: #a0ecff;
+        stroke: #a0ecff;
+        stroke-width: 3px;
+        fill-rule: evenodd;
+      }
+      .cls-4 {
+        fill: #a0fea0;
+      }
+    </style>
+  </defs>
+  <g id="Tekengebied_2" data-name="Tekengebied 2">
+    <g id="Groep_2" data-name="Groep 2">
+      <circle id="Ovaal_1" data-name="Ovaal 1" class="cls-1" cx="471.5" cy="450.5" r="82.5"/>
+      <circle id="Ovaal_1_kopiëren" data-name="Ovaal 1 kopiëren" class="cls-1" cx="471.5" cy="1497.31" r="82.5"/>
+      <circle id="Ovaal_1_kopiëren_2" data-name="Ovaal 1 kopiëren 2" class="cls-1" cx="471.5" cy="799.219" r="82.5"/>
+      <circle id="Ovaal_1_kopiëren_3" data-name="Ovaal 1 kopiëren 3" class="cls-1" cx="471.5" cy="1148.59" r="82.5"/>
+    </g>
+    <rect id="Afgeronde_rechthoek_1" data-name="Afgeronde rechthoek 1" class="cls-2" x="476" y="194" width="897" height="1529" rx="166" ry="166"/>
+    <g id="Groep_1" data-name="Groep 1">
+      <path id="Rechthoek_4_kopiëren_5" data-name="Rechthoek 4 kopiëren 5" class="cls-3" d="M1389,838h788v20H1389V838Z" transform="translate(-804)"/>
+      <path id="Rechthoek_4_kopiëren_4" data-name="Rechthoek 4 kopiëren 4" class="cls-3" d="M1389,395h788v20H1389V395Z" transform="translate(-804)"/>
+      <path id="Rechthoek_4_kopiëren_3" data-name="Rechthoek 4 kopiëren 3" class="cls-3" d="M1389,616h788v20H1389V616Z" transform="translate(-804)"/>
+      <path id="Rechthoek_4_kopiëren_2" data-name="Rechthoek 4 kopiëren 2" class="cls-3" d="M1389,1059h788v20H1389v-20Z" transform="translate(-804)"/>
+      <path id="Rechthoek_4_kopiëren" data-name="Rechthoek 4 kopiëren" class="cls-3" d="M1389,1502h788v20H1389v-20Z" transform="translate(-804)"/>
+      <path id="Rechthoek_4" data-name="Rechthoek 4" class="cls-3" d="M1389,1281h788v20H1389v-20Z" transform="translate(-804)"/>
+    </g>
+    <path id="Rechthoek_3" data-name="Rechthoek 3" class="cls-4" d="M642,194h42a0,0,0,0,1,0,0V1723a0,0,0,0,1,0,0H642a166,166,0,0,1-166-166V360A166,166,0,0,1,642,194Z"/>
+  </g>
+</svg>

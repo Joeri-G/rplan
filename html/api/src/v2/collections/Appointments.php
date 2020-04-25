@@ -27,6 +27,7 @@ class Appointments {
     $this->action = $this->request->action;
     $this->selector = $this->request->selector;
     $this->selector2 = $this->request->selector2;
+    $this->selector3 = $this->request->selector3;
 
     if (is_null($this->selector)) {
       $this->response->sendError(6);
@@ -62,19 +63,75 @@ class Appointments {
   }
 
   private function list() {
-    //we can only list appointments in a specific timeframe to prevent complete chaos
-    if ($this->validateDate($this->selector)) {
-      //if a second date is set use that date as the end date
-      $enddate = (isset($this->selector2)) ? $this->selector2 : null;
-      return $this->listTimestamp($this->selector, $enddate);
-    }
-    elseif ($this->request->isValidGUID()) {
-      return $this->listGUID($this->selector);
-    }
-    else {
+    // //we can only list appointments in a specific timeframe to prevent complete chaos
+    // if ($this->validateDate($this->selector)) {
+    //   //if a second date is set use that date as the end date
+    //   $enddate = (isset($this->selector2)) ? $this->selector2 : null;
+    //   return $this->listTimestamp($this->selector, $enddate);
+    // }
+    // elseif ($this->request->isValidGUID()) {
+    //   return $this->listGUID($this->selector);
+    // }
+    // else {
+    //   $this->response->sendError(17);
+    //   return false;
+    // }
+    // Only list usernames in a specific timeframe to prevent having to return 2000 rows
+    if (!$this->validateDate($this->selector) && !$this->request->isValidGUID($this->selector)) {
       $this->response->sendError(17);
       return false;
     }
+
+    if ($this->request->isValidGUID($this->selector)) {
+      $this->listGUID($this->selector);
+      return true;
+    }
+
+
+    if ($this->validateDate($this->selector2)) {
+      if ($this->request->isValidGUID($this->selector3)) {
+        // Return daterange with GUID
+        $enddate = (isset($this->selector2)) ? $this->selector2 : null;
+        $this->listTimestampGUID($this->selector, $enddate);
+        return true;
+      }
+      $enddate = (isset($this->selector2)) ? $this->selector2 : null;
+      $this->listTimestamp($this->selector, $enddate);
+      return true;
+    }
+  }
+
+  private function listTimestampGUID(string $start = "2000-01-01", string $end = "2000-01-01", string $GUID = null) {
+    if (!$this->validateDate($start) || !$this->validateDate($end) || $this->request->isValidGUID($GUID)) {
+      $this->response->sendError(20);
+      return false;
+    }
+    // check if a filter has been given else, look in every field
+    if (!isset($_GET['f']) || !in_array($_GET['f'], ['class', 'classroom', 'project', 'teacher'])) {
+      $stmt = $this->conn->prepare(
+        "SELECT start, duration, teacher1, teacher2, class, classroom1, classroom2, project, notes, GUID
+        FROM appointments
+        WHERE DATE(start) >= :start AND DATE(start) <= :end AND (
+          teacher1 = :g OR teacher2 = :g OR teacher1 = :g OR class = :g OR classroom1 = :g OR classroom2 = :g OR project = :g
+        ) ORDER BY start"
+      );
+    }
+    else {
+      $f = $_GET['f'];
+      $stmt = $this->conn->prepare( // this is safe-ish since we checked $f against a list of known-safe values
+        "SELECT start, duration, teacher1, teacher2, class, classroom1, classroom2, project, notes, GUID
+        FROM appointments
+        WHERE DATE(start) >= :start AND DATE(start) <= :end AND $f = :g
+        ORDER BY start"
+      );
+    }
+    $stmt->execute([
+      "g" => $GUID,
+      "start" => $start,
+      "end" => $end
+    ]);
+    $data = $stmt->fetchAll(\FETCH_ASSOC);
+    $this->response->sendSuccess($data);
   }
 
   private function listTimestamp(string $start = "2000-01-01", string $end = null) {

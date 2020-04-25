@@ -1,10 +1,25 @@
 import React, { Component } from 'react';
-import './css/Login.css';
+import ViewWeek from './ViewWeek';
+import './css/ViewWeek.css';
 
-export default class Login extends Component {
+export default class App extends Component {
+  constructor(props) {
+    super(props);
+
+    if (typeof localStorage.displaymode !== "string") localStorage.displaymode = "week";
+    let displaymode = localStorage.displaymode;
+
+    this.state = {
+      userdata: this.props.userdata,
+      displaymode: displaymode
+    }
+  }
   render() {
+    console.log(this.state.displaymode);
     return (
-      <h1>App</h1>
-    )
+      <main>
+        {this.state.displaymode ? <ViewWeek /> : null}
+      </main>
+    );
   }
 }

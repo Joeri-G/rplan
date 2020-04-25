@@ -13,4 +13,11 @@ This file contains page wide css settings
 
   --page-static-components-bg-color: #565656;
   --page-static-components-text-color: #fff;
+
+  --day-bg-color: #fff6d4;
+  --day-height: 900px;
+
+  --appointment-bg-color: #a1e3ff;
+
+  --main-width: clamp(700px, 90vw, 2800px);
 }

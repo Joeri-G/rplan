@@ -98,5 +98,10 @@
     "id": 19,
     "http": 400,
     "msg": "Smallest date must come first"
+  },
+  {
+    "id": 20,
+    "http": 400,
+    "msg": "Invalid date GUID combination"
   }
 ]

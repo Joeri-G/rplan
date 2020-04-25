@@ -14,6 +14,7 @@ class RequestActions {
   public $allowedCollections = ["users", "admin"];
   public $collectionException = [];
   public $selector2 = null;
+  public $selector3 = null;
 
   private $parts = [];
 
@@ -38,6 +39,9 @@ class RequestActions {
     }
     if (count($this->parts) > 3) {
       $this->selector2 = $this->parts[3];
+    }
+    if (count($this->parts) > 4) {
+      $this->selector3 = $this->parts[4];
     }
   }
 
@@ -115,7 +119,8 @@ class RequestActions {
     return true;
   }
 
-  public function isValidGUID() {
+  public function isValidGUID($guid = null) {
+    if ($guid) return preg_match("^(\{){0,1}[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}(\}){0,1}^", $guid);
     return preg_match("^(\{){0,1}[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}(\}){0,1}^", $this->selector);
   }
 }

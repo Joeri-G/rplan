@@ -1,0 +1,30 @@
+.datepicker, .viewWeek {
+  width: var(--main-width);
+  margin: 6em auto 0;
+}
+
+.datepicker {
+  border: 1px solid #000;
+  text-align: center;
+}
+
+.viewWeek {
+  margin: 2em auto;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+}
+
+.day {
+  text-align: center;
+  background: var(--day-bg-color);
+  margin: 0 0.5em;
+  height: var(--day-height);
+}
+
+.appointment {
+  position: absolute;
+  display: block;
+  width: calc(var(--main-width) / 5 - 1em); /* some complex css to make sure the appointment is the same size as the parent */
+  z-index: 0;
+  background: var(--appointment-bg-color);
+}

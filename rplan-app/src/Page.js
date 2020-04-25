@@ -21,7 +21,7 @@ export default class Home extends Component {
             <Nav />
             {
               // if the user isn't loggedin show the login screen
-              this.state.loggedin ? <App loggedin={this.state.loggedin} userdata={this.state.userdata} /> : <Login updateLogin={this.updateLogin} />
+              this.state.loggedin ? <App userdata={this.state.userdata} /> : <Login updateLogin={this.updateLogin} />
             }
             <Footer />
           </React.Fragment>
