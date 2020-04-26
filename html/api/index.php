@@ -38,6 +38,10 @@ if (!$db->connect($errmode = 2)) {
 $auth = new v2\lib\authCheck($response, $db);
 if (!$auth->check()) {
   if ($request->method === "OPTIONS") die();
+  if ($request->collection === "conf" && $request->selector === 'clients') {
+    new v2\collections\Conf($response, $db, $request);
+    die();
+  }
   header("WWW-Authenticate: Basic ream=\"Authentication is required to use this API\"");
   $response->sendError(10);
   die();
@@ -68,7 +72,9 @@ switch ($request->collection) {
   case 'userdata':
     new v2\collections\Userdata($response, $db, $request);
     break;
-
+  case 'conf':
+    new v2\collections\Conf($response, $db, $request);
+    break;
   default:
     $response->sendError(16);
     die();

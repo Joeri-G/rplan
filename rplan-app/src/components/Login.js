@@ -64,10 +64,7 @@ class Schoolselect extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      data: [
-        {text: "Calandlyceum", value: "http://localhost:3000/"},
-        {text: "TEST", value: "http://localhost:3000/test/"}
-      ],
+      data: [],
       currentpage: {
         text: "Selecteer een school",
         value: "None"
@@ -77,17 +74,37 @@ class Schoolselect extends Component {
   }
 
   componentDidMount() {
-    // Loop through data and check if there's a match between the current URL and the value
-    for (const item of this.state.data) {
-      if (window.location.href === item.value)
-      this.setState({currentpage: item});
-    }
+    // load the available environments
+    API.get('/conf/clients').then((response) => {
+      if (response.data.succesfull) {
+        let data = [];
+        for (const d of response.data.response) {
+          data.push({
+            text: d.name,
+            value: d.domain,
+            GUID: d.GUID
+          });
+          if (window.location.hostname === d.domain && this.state.currentpage !== data)
+            this.setState({
+              currentpage: {
+                text: d.name,
+                value: d.domain
+              }
+            });
+        }
+        this.setState({
+          data: data
+        });
+      }
+    }).catch((error) => {
+      console.error(error);
+    });
   }
 
   redirect = (e) => {
     let target = e.target.dataset.value;
-    if (window.location.href !== target && validURL(target)) {
-      window.location = target;
+    if (window.location.hostname !== target && validURL(`http://${target}/`)) {
+      window.location = `http://${target}/`;
     }
   }
 

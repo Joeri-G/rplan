@@ -1,5 +1,6 @@
 CREATE DATABASE `planner_settings`;
 CREATE TABLE `plannerclients` (
+	`name` varchar(128) NOT NULL,
 	`domain` varchar(128) NOT NULL,
 	`db` varchar(128) NOT NULL,
 	`db_user` VARCHAR(128),

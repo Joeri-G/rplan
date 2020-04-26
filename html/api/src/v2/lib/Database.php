@@ -11,6 +11,8 @@ class Database {
   private $password = "";
   public $conn = null;
 
+  public $clients = null;
+
   public $tables = ["users"];
 
   function __construct($response = null, $switch = true) {
@@ -35,6 +37,11 @@ class Database {
     $stmt->execute(["d" => $domain]);
 
     $data = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+    // load all other clients
+    $stm2 = $conn->prepare("SELECT name, domain, GUID FROM plannerclients WHERE active = 1");
+    $stm2->execute();
+    $this->clients = $stm2->fetchAll(\PDO::FETCH_ASSOC);
 
     $this->conn = $conn = null;
 
