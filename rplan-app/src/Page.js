@@ -10,18 +10,25 @@ export default class Home extends Component {
     super(props);
     this.state = {
       loggedin: false,
-      userdata: null
+      userdata: null,
+      target: (typeof localStorage.displaymode === "string") ? localStorage.displaymode : "week"
     }
     this.updateLogin = this.updateLogin.bind(this);
+    this.setmode = this.updateLogin.bind(this);
+  }
+
+  setmode = (e) => {
+    let target = e.target.dataset.target;
+    this.setState({target: target});
   }
 
   render() {
     return (
       <React.Fragment>
-        <Nav />
+        <Nav updateLogin={this.updateLogin} setmode={this.setmode} />
         {
           // if the user isn't loggedin show the login screen
-          this.state.loggedin ? <App userdata={this.state.userdata} /> : <Login updateLogin={this.updateLogin} />
+          this.state.loggedin ? <App userdata={this.state.userdata} displaymode={this.state.target} /> : <Login updateLogin={this.updateLogin} />
         }
         <Footer />
       </React.Fragment>)

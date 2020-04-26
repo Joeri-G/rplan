@@ -27,8 +27,35 @@
 .appointment {
   position: absolute;
   display: block;
-  width: calc(var(--main-width) / 5 - 1em); /* some complex css to make sure the appointment is the same size as the parent */
+  width: calc(var(--main-width) / 5 - 1em);
+  /* some css to make sure the appointment is the same size as the parent */
   margin: 0 0.5em;
   z-index: 0;
   background: var(--appointment-bg-color);
+}
+
+.modal {
+  display: block;
+  position: fixed;
+  z-index: 1;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0, 0, 0, 0.4);
+}
+
+.modalContent {
+  display: block;
+  position: fixed;
+  z-index: 1;
+  left: 20%;
+  top: 10%;
+  margin: 0 auto;
+  width: 60%;
+  height: 80%;
+  background: white;
+  border-radius: 24px;
+  padding: 32px;
 }

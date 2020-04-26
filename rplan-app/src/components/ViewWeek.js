@@ -44,8 +44,11 @@ class Calendar extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      appointments: []
+      appointments: [],
+      appointmentWindow: false,
+      appointmentDay: null
     };
+    this.dayClick = this.dayClick.bind(this);
   }
 
   async componentDidMount() {
@@ -90,6 +93,31 @@ class Calendar extends Component {
     return data;
   }
 
+  newAppointment = () => {
+    return (
+      <section>
+        <div className="modal" onClick={() => {this.setState({
+          appointmentWindow: false,
+          appointmentDay: null
+        })}}></div>
+        <div className="modalContent newAppointment">
+          <h1>Nieuwe afspraak</h1>
+          <p>{this.state.appointmentDay}</p>
+        </div>
+      </section>
+    );
+  }
+
+  dayClick = (day) => {
+    // create new appointment
+
+    this.setState({
+      appointmentWindow: true,
+      appointmentDay: day
+    });
+  }
+
+
   render() {
     let appointments = [ [], [], [], [], [] ];
     let day = 1;
@@ -105,21 +133,20 @@ class Calendar extends Component {
     return (
       <main className="viewWeek">
         <div className="days">
-          <Day appointments={appointments[0]} day={formatDate(getNextDayOfWeek(this.props.startdate, 1))} />
-          <Day appointments={appointments[1]} day={formatDate(getNextDayOfWeek(this.props.startdate, 2))} />
-          <Day appointments={appointments[2]} day={formatDate(getNextDayOfWeek(this.props.startdate, 3))} />
-          <Day appointments={appointments[3]} day={formatDate(getNextDayOfWeek(this.props.startdate, 4))} />
-          <Day appointments={appointments[4]} day={formatDate(getNextDayOfWeek(this.props.startdate, 5))} />
+          <Day appointments={appointments[0]} day={formatDate(getNextDayOfWeek(this.props.startdate, 1))} dayClick={this.dayClick} />
+          <Day appointments={appointments[1]} day={formatDate(getNextDayOfWeek(this.props.startdate, 2))} dayClick={this.dayClick} />
+          <Day appointments={appointments[2]} day={formatDate(getNextDayOfWeek(this.props.startdate, 3))} dayClick={this.dayClick} />
+          <Day appointments={appointments[3]} day={formatDate(getNextDayOfWeek(this.props.startdate, 4))} dayClick={this.dayClick} />
+          <Day appointments={appointments[4]} day={formatDate(getNextDayOfWeek(this.props.startdate, 5))} dayClick={this.dayClick} />
         </div>
+        { this.state.appointmentWindow ? this.newAppointment() : null }
       </main>
     );
   }
 }
 
 class Day extends Component {
-  click = () => {
-    alert(`You just pressed day ${this.props.day}`);
-  }
+
   render() {
     // this is a quick hack to allow for different onClicks
     return (
@@ -129,7 +156,7 @@ class Day extends Component {
             return <Appointment key={appointment.GUID} data={appointment} />
           })}
         </div>
-        <div className="day" onClick={this.click}></div>
+        <div className="day" onClick={() => {this.props.dayClick(this.props.day)}}></div>
       </section>
     );
   }

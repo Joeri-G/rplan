@@ -6,19 +6,15 @@ export default class App extends Component {
   constructor(props) {
     super(props);
 
-    if (typeof localStorage.displaymode !== "string") localStorage.displaymode = "week";
-    let displaymode = localStorage.displaymode;
-
     this.state = {
-      userdata: this.props.userdata,
-      displaymode: displaymode
+      userdata: this.props.userdata
     }
   }
   render() {
     console.log(this.state.displaymode);
     return (
       <main>
-        {this.state.displaymode ? <ViewWeek /> : null}
+        {this.props.displaymode ? <ViewWeek /> : null}
       </main>
     );
   }

@@ -6,10 +6,14 @@ export default class Nav extends Component {
     return (
         <nav>
           <div className="navInner">
-            <a href="#planner" onClick={this.props.reload}>Weekplanner</a>
-            <a href="#planner-full" onClick={this.props.reload}>Dagplanner</a>
-            <a href="#projects" onClick={this.props.reload}>Projecten</a>
-            <a href="#admin" onClick={this.props.reload}>Panel</a>
+            <button onClick={this.props.setmode} data-target="weekplanner">Weekplanner</button>
+            <button onClick={this.props.setmode} data-target="dyaplanner">Dagplanner</button>
+            <button onClick={this.props.setmode} data-target="projects">Projecten</button>
+            <button onClick={this.props.setmode} data-target="panel">Panel</button>
+            <button onClick={() => {
+              localStorage.api_key = null;
+              this.props.updateLogin();
+            }}>Logout</button>
           </div>
         </nav>
     )

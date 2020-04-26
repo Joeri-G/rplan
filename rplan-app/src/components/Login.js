@@ -68,12 +68,13 @@ class Schoolselect extends Component {
       currentpage: {
         text: "Selecteer een school",
         value: "None"
-      }
+      },
+      ismounted: true
     }
     this.redirect = this.redirect.bind(this);
   }
 
-  componentDidMount() {
+  async componentDidMount() {
     // load the available environments
     API.get('/conf/clients').then((response) => {
       if (response.data.succesfull) {
@@ -84,7 +85,8 @@ class Schoolselect extends Component {
             value: d.domain,
             GUID: d.GUID
           });
-          if (window.location.hostname === d.domain && this.state.currentpage !== data)
+          // I know this only removes the error message but I don't have time for it now
+          if (window.location.hostname === d.domain && this.state.currentpage !== data && this.state.ismounted)
             this.setState({
               currentpage: {
                 text: d.name,
@@ -92,13 +94,18 @@ class Schoolselect extends Component {
               }
             });
         }
-        this.setState({
-          data: data
-        });
+        if (this.state.ismounted)
+          this.setState({
+            data: data
+          });
       }
     }).catch((error) => {
       console.error(error);
     });
+  }
+
+  componentWillUnmount() {
+    this.setState({ismounted: false});
   }
 
   redirect = (e) => {
