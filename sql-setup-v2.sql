@@ -69,7 +69,7 @@ CREATE TABLE `users` (
   `username` varchar(64) NOT NULL,
   `password` varchar(256) NOT NULL,
   `userLVL` int(1) NOT NULL,
-  `api_key` varchar(64) NOT NULL
+  `api_key` varchar(64) NOT NULL,
   `lastLoginIP` varchar(64) NOT NULL,
   `lastLoginTime` timestamp(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
   `lastChanged` timestamp(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
