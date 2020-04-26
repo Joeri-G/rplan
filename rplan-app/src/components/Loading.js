@@ -5,7 +5,7 @@ export default function Load(load = true) {
   let loading = document.getElementById("loading");
   let loadingContent = document.getElementById("loadingContent");
   if (loading === null || loadingContent === null) {
-    console.error('It looks like this page was incomplete, please add the following HTML:\n<div id="loading" class="noselect">\n\t<div id="loadingContent">\n\t\t<img src="/images/loading.svg" alt="Loading..." />\n\t</div>\n</div>');
+    console.error('It looks like this page was incomplete, please add the following HTML:\n<div id="loading" class="noselect">\n\t<div id="loadingContent">\n\t\t<img src="images/loading.svg" alt="Loading..." />\n\t</div>\n</div>');
     return;
   }
   // fadein
