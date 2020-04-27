@@ -9,7 +9,7 @@ export default class Home extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      loggedin: false,
+      loggedin: true,
       userdata: null,
       target: (typeof localStorage.displaymode === "string") ? localStorage.displaymode : "week"
     }
