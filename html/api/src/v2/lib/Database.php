@@ -80,7 +80,7 @@ class Database {
       }
       $this->conn->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
     } catch (\PDOException $error) {
-      $this->response->sendError(3);
+      $this->response->sendError(0);
       return false;
     }
     return $this->conn;
