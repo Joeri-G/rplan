@@ -8,9 +8,6 @@
   text-align: center;
 }
 
-.viewWeek {
-}
-
 .viewWeek > .days {
   margin: 2em auto;
   display: grid;
@@ -24,14 +21,10 @@
   height: var(--day-height);
 }
 
-.appointment {
-  position: absolute;
-  display: block;
-  width: calc(var(--main-width) / 5 - 1em);
-  /* some css to make sure the appointment is the same size as the parent */
-  margin: 0 0.5em;
-  z-index: 0;
-  background: var(--appointment-bg-color);
+.dayComponent > p {
+  text-align: center;
+  font-size: 1.5em;
+  margin-bottom: 1em;
 }
 
 .modal {
@@ -50,12 +43,61 @@
   display: block;
   position: fixed;
   z-index: 1;
-  left: 20%;
-  top: 10%;
+  left: 30%;
+  top: 20%;
   margin: 0 auto;
-  width: 60%;
-  height: 80%;
+  width: 40%;
+  max-height: 60%;
   background: white;
   border-radius: 24px;
   padding: 32px;
+}
+
+.appointment > .duration {
+  text-align: center;
+  font-size: 1.5em;
+  margin: 0.5em 0;
+}
+
+.appointment {
+  padding: 0.25;
+  z-index: 2;
+  position: absolute;
+  display: block;
+  width: calc(var(--main-width) / 5 - 1em);
+  /* some css to make sure the appointment is the same size as the parent */
+  margin: 0 0.5em;
+  z-index: 0;
+  background: var(--appointment-bg-color);
+}
+
+.durationInput {
+  margin: 1em 0 2em;
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  text-align: center;
+}
+
+.durationInputContinue {
+  float: right;
+  border: 0;
+  cursor: pointer;
+  padding: 0.5em;
+  font-size: 1em;
+  background: #ddd;
+}
+
+.durationInputContinue:hover, .durationInputContinue:focus {
+  background: #ccc;
+}
+
+.newAppointment .message {
+  background: #FF9021;
+  text-align: center;
+  padding: 0.5em;
+}
+
+.propertyInput {
+
 }

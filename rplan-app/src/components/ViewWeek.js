@@ -7,7 +7,8 @@ export default class ViewWeek extends Component {
     this.state = {
       currentdate: new Date(),
       startdate: getNextDayOfWeek(new Date(), 1),
-      target: '17c7d684-cda2-41ed-924d-e58fa7282571'
+      target: '063c270a-7772-4143-8e9a-833f4ef74a18',
+      mode: "class"
     };
   }
 
@@ -24,7 +25,7 @@ export default class ViewWeek extends Component {
     return (
       <React.Fragment>
         <Datepicker dateCallback={null} selectorCallback={null} />
-        <Calendar startdate={this.state.startdate} currentdate={this.state.currentdate} target={this.state.target} />
+        <Calendar mode={this.state.mode} startdate={this.state.startdate} currentdate={this.state.currentdate} target={this.state.target} />
       </React.Fragment>
     );
   }
@@ -62,8 +63,8 @@ class Calendar extends Component {
   }
 
   calcPxOffset = (start, end) => {
-    let startHour = 8;
-    let endHour = 18;
+    let startHour = 7.5;
+    let endHour = 17.5;
     let dayheight = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--day-height').slice(0, -2), 10);
 
     start = MYSQLdatetimeToDate(start);
@@ -87,25 +88,17 @@ class Calendar extends Component {
       startTimestamp: ap.start,
       endTimestamp: ap.endstamp,
       start: pxValues.start,
+      teacher1: ap.teacher1,
+      teacher2: ap.teacher2,
+      class: ap.class,
+      classroom1: ap.classroom1,
+      classroom2: ap.classroom2,
+      project: ap.project,
+      notes: ap.notes,
       duration: pxValues.duration,
       GUID: ap.GUID
     };
     return data;
-  }
-
-  newAppointment = () => {
-    return (
-      <section>
-        <div className="modal" onClick={() => {this.setState({
-          appointmentWindow: false,
-          appointmentDay: null
-        })}}></div>
-        <div className="modalContent newAppointment">
-          <h1>Nieuwe afspraak</h1>
-          <p>{this.state.appointmentDay}</p>
-        </div>
-      </section>
-    );
   }
 
   dayClick = (day) => {
@@ -139,7 +132,12 @@ class Calendar extends Component {
           <Day appointments={appointments[3]} day={formatDate(getNextDayOfWeek(this.props.startdate, 4))} dayClick={this.dayClick} />
           <Day appointments={appointments[4]} day={formatDate(getNextDayOfWeek(this.props.startdate, 5))} dayClick={this.dayClick} />
         </div>
-        { this.state.appointmentWindow ? this.newAppointment() : null }
+        { this.state.appointmentWindow ? <NewAppointment closeCallback={() => {
+          this.setState({
+            appointmentWindow: !this.state.appointmentWindow,
+            appointmentDay: null
+          });
+        }} appointmentDay={this.state.appointmentDay} displayMode={this.state.mode} selectedTarget={this.state.target} /> : null }
       </main>
     );
   }
@@ -150,7 +148,8 @@ class Day extends Component {
   render() {
     // this is a quick hack to allow for different onClicks
     return (
-      <section>
+      <section className="dayComponent">
+        <p>{getDay(new Date(this.props.day))}</p>
         <div className="dayCover">
           {this.props.appointments.map((appointment) => {
             return <Appointment key={appointment.GUID} data={appointment} />
@@ -177,8 +176,115 @@ class Appointment extends Component {
       height:  this.props.data.duration.toString()+"px"
     };
 
+    let startHour = new Date(this.props.data.startTimestamp).getHours().toString();
+    let startMin = new Date(this.props.data.startTimestamp).getMinutes().toString();
+    if (startHour.length < 2) startHour = `0${startHour}`;
+    if (startMin.length < 2) startMin = `0${startMin}`;
+
+    let endHour = new Date(this.props.data.endTimestamp).getHours().toString();
+    let endMin = new Date(this.props.data.endTimestamp).getMinutes().toString();
+    if (endHour.length < 2) endHour = `0${endHour}`;
+    if (endMin.length < 2) endMin = `0${endMin}`;
+
     return (
-      <div className="appointment" style={this.style} onClick={this.click}></div>
+      <div className="appointment" style={this.style} onClick={this.click}>
+        <p className="duration">{`${startHour}:${startMin} - ${endHour}:${endMin}`}</p>
+      </div>
+    );
+  }
+}
+
+class NewAppointment extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      message: null,
+      hasTime: false,
+      startTime: null,
+      endTime: null
+    }
+  }
+  selectTimeframe = () => {
+    return (
+      <React.Fragment>
+        <div className="durationInput">
+          <span>
+            <label htmlFor="startTimeInput">Starttijd: </label>
+            <input type="time" name="startTimeInput" id="startTimeInput" />
+          </span>
+          <span>
+            <label htmlFor="endTimeInput">Eindtijd: </label>
+            <input type="time" name="endTimeInput" id="endTimeInput" />
+          </span>
+        </div>
+        <button className="durationInputContinue" onClick={this.verifyTime}>Verder</button>
+      </React.Fragment>
+    );
+  }
+  verifyTime = () => {
+    let startTime = document.querySelector("#startTimeInput").value;
+    let endTime = document.querySelector("#endTimeInput").value;
+
+    if (endTime === "" || startTime === "") {
+      this.setState({
+        hasTime: false,
+        message: "Invalid time"
+      });
+      return;
+    }
+
+    let d1 = new Date();
+    let d2 = new Date();
+
+    d1.setHours(parseInt(startTime.slice(0,2)));
+    d1.setMinutes(parseInt(startTime.slice(3,5)));
+    d2.setHours(parseInt(endTime.slice(0,2)));
+    d2.setMinutes(parseInt(endTime.slice(3,5)));
+    let comparableStart = d1.getTime();
+    let comparableEnd = d2.getTime();
+
+    if (endTime < startTime) {
+      this.setState({
+        hasTime: false,
+        message: "Endtime must be after starttime"
+      });
+      return;
+    }
+
+    this.setState({
+      hasTime: true,
+      startTime: startTime,
+      endTime: endTime,
+      message: null
+    });
+  }
+
+  selectAppointmentProperties = () => {
+    return (
+      <div className="propertyInput">
+        {/* display selectclass or selectteacter depending on displaymode */}
+        <input type="hidden" value={this.props.selectedTarget} id={(this.props.displayMode === 'class') ? "class1Input"  : "teacher1Input"} />
+
+      </div>
+    );
+  }
+
+  requestAvailableResources = () => {
+
+  }
+
+  render() {
+    return (
+      <section>
+        <div className="modal" onClick={this.props.closeCallback}></div>
+        <div className="modalContent newAppointment">
+          <h1>Nieuwe afspraak</h1>
+          <p>{this.props.appointmentDay}</p>
+          {(this.state.message) ? <p className="message">{this.state.message}</p> : null}
+          <input type="hidden" value={this.props.appointmentDay} id="dateInput" />
+          {(!this.state.hasTime) ? this.selectTimeframe() : this.selectAppointmentProperties() }
+        </div>
+      </section>
     );
   }
 }
@@ -207,4 +313,9 @@ function MYSQLdatetimeToDate(dateTime) {
   dateTimeParts[1]--; // monthIndex begins with 0 for January and ends with 11 for December so we need to decrement by one
 
   return new Date(...dateTimeParts); // our Date object
+}
+
+function getDay(date) {
+  let days = ["Zo", "Ma", "Di", "Wo", "Do", "Vr", "Za"];
+  return days[date.getDay()];
 }
