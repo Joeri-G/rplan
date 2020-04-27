@@ -35,7 +35,7 @@ if (!$db->connect($errmode = 2)) {
   die();
 }
 
-$auth = new v2\lib\authCheck($response, $db);
+$auth = new v2\lib\AuthCheck($response, $db);
 if (!$auth->check()) {
   if ($request->method === "OPTIONS") die();
   if ($request->collection === "conf" && $request->selector === 'clients') {
