@@ -63,19 +63,6 @@ class Appointments {
   }
 
   private function list() {
-    // //we can only list appointments in a specific timeframe to prevent complete chaos
-    // if ($this->validateDate($this->selector)) {
-    //   //if a second date is set use that date as the end date
-    //   $enddate = (isset($this->selector2)) ? $this->selector2 : null;
-    //   return $this->listTimestamp($this->selector, $enddate);
-    // }
-    // elseif ($this->request->isValidGUID()) {
-    //   return $this->listGUID($this->selector);
-    // }
-    // else {
-    //   $this->response->sendError(17);
-    //   return false;
-    // }
     // Only list usernames in a specific timeframe to prevent having to return 2000 rows
     if (!$this->validateDate($this->selector) && !$this->request->isValidGUID($this->selector)) {
       $this->response->sendError(17);
@@ -211,7 +198,7 @@ class Appointments {
   }
 
   private function add() {
-
+    // yay, lots of input checks
   }
 
   private function update() {
