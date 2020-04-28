@@ -139,7 +139,7 @@ class Calendar extends Component {
             appointmentWindow: !this.state.appointmentWindow,
             appointmentDay: null
           });
-        }} appointmentDay={this.state.appointmentDay} displayMode={this.state.mode} selectedTarget={this.state.target} /> : null }
+        }} appointmentDay={this.state.appointmentDay} displayMode={this.props.mode} selectedTarget={this.state.target} /> : null }
       </main>
     );
   }

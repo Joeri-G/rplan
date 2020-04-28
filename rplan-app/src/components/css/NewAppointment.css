@@ -14,10 +14,10 @@
   display: block;
   position: fixed;
   z-index: 1;
-  left: 30%;
+  left: calc((100% - 500px) / 2);
   top: 20%;
   margin: 0 auto;
-  width: 40%;
+  width: 500px;
   max-height: 60%;
   background: white;
   border-radius: 24px;
@@ -32,7 +32,7 @@
   text-align: center;
 }
 
-.durationInputContinue {
+.durationInputContinue, .propertyInputContinue {
   float: right;
   border: 0;
   cursor: pointer;
@@ -41,7 +41,8 @@
   background: #ddd;
 }
 
-.durationInputContinue:hover, .durationInputContinue:focus {
+.durationInputContinue:hover, .durationInputContinue:focus,
+.propertyInputContinue:hover, .propertyInputContinue:focus {
   background: #ccc;
 }
 
@@ -52,5 +53,28 @@
 }
 
 .propertyInput {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
 
+.propertyInput > * {
+  margin: 0.25em;
+}
+
+.propertyInput input[type=number] {
+  padding: 0;
+}
+
+#notesInput {
+  margin: 0.25em;
+  width: 100%;
+  padding: 0.5em;
+}
+
+.propertyInput .customDropdownButtonOptions {
+  width: calc((500px - 5em) / 2);
+}
+
+.propertyInputContinue {
+  margin-top: 1em;
 }
