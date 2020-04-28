@@ -30,12 +30,25 @@ export default class Dropdown extends Component {
   }
 
   render() {
+    let clickCatchStyle = {
+      width: "100vw",
+      height: "100vh",
+      position: "absolute",
+      top: "0",
+      left:"0",
+      background: "rgba(0,0,0,0)",
+      display: (this.state.displayOptions) ? "block" : "none"
+    }
     return (
-      <div className="customDropdownButton">
-        <button className="optionButton titleButton" onClick={this.toggleOptions}>{(this.state.haschanged) ? this.state.title : this.props.title}</button>
-        <input type="hidden" value={this.state.value} id={this.state.id} />
-        <DropOption display={this.state.displayOptions} data={this.props.data} callback={this.setValue} />
-      </div>
+      <React.Fragment>
+        {/* empty element that sits behind the dropdown so that when we click outside of the dropdown this catches it and closes it */}
+        <div style={clickCatchStyle} onClick={() => {this.setState({displayOptions: !this.state.displayOptions})}}></div>
+        <div className="customDropdownButton">
+          <button className="optionButton titleButton" onClick={this.toggleOptions}>{(this.state.haschanged) ? this.state.title : this.props.title}</button>
+          <input type="hidden" value={this.state.value} id={this.state.id} />
+          <DropOption display={this.state.displayOptions} data={this.props.data} callback={this.setValue} />
+        </div>
+      </React.Fragment>
     )
   }
 }

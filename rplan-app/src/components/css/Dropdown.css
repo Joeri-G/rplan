@@ -32,7 +32,7 @@
 }
 
 .customDropdownButtonOptions {
-  z-index: 4;
+  z-index: 1;
   max-height: 600px;
   overflow: auto;
   position: absolute;
@@ -46,6 +46,15 @@
   cursor: pointer;
   width: 100%;
   display: block;
+  text-align: center;
+  margin: 0.25em auto;
+  padding: 0.5em;
+  border: none;
+}
+
+.customDropdownButton input:hover, .customDropdownButton input:focus,
+.customDropdownButton button:hover, .customDropdownButton button:focus {
+  background: #ddd;
 }
 
 .customDropdownButton input[type=search] {
