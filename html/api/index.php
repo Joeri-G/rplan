@@ -7,7 +7,7 @@ define("allowedMethods", ["GET", "POST", "PUT", "DELETE", "OPTIONS"]); //all the
 define("versions", ["v2"]); //all supported api versions
 define("allowedCollections", ["classes", "classrooms", "teachers", "projects", "laptops", "admin", "users", "config", "appointments"]); //allowed collections
 define("tables", ["classes", "classrooms", "users", "deleted", "appointments", "projects", "teachers", "users"]);
-define("collectionException", ["conf", "login", "userdata"]);
+define("collectionException", ["conf", "login", "userdata", "availability"]);
 //start response handler
 $response = new v2\lib\ResponseHandler();
 //load error messages
@@ -74,6 +74,9 @@ switch ($request->collection) {
     break;
   case 'conf':
     new v2\collections\Conf($response, $db, $request);
+    break;
+  case 'availability':
+    new v2\collections\Availability($response, $db, $request);
     break;
   default:
     $response->sendError(16);
