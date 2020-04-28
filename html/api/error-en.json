@@ -103,5 +103,10 @@
     "id": 20,
     "http": 400,
     "msg": "Invalid date GUID combination"
+  },
+  {
+    "id": 21,
+    "http": 400,
+    "msg": "Two timestamps must be supplied, separated by a slash and in 'Y-m-d_H:i' and the earliest stamp first"
   }
 ]
