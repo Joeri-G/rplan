@@ -73,6 +73,5 @@ export default class Home extends Component {
       loggedin: set,
       userdata: userdata
     });
-    console.log(this.state);
   }
 }
