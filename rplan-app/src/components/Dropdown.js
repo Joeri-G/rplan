@@ -45,7 +45,7 @@ export default class Dropdown extends Component {
         <div style={clickCatchStyle} onClick={() => {this.setState({displayOptions: !this.state.displayOptions})}}></div>
         <div className="customDropdownButton">
           <button className="optionButton titleButton" onClick={this.toggleOptions}>{(this.state.haschanged) ? this.state.title : this.props.title}</button>
-          <input type="hidden" value={this.state.value} id={this.state.id} />
+          <input type="hidden" value={(!this.state.value) ? "" : this.state.value} id={this.state.id} />
           <DropOption display={this.state.displayOptions} data={this.props.data} callback={this.setValue} />
         </div>
       </React.Fragment>
