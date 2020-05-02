@@ -10,7 +10,7 @@ export default class Dropdown extends Component {
       title: this.props.title,
       displayOptions: false,
       id: this.props.ID,
-      value: (typeof this.props.default.value !== undefined && this.props.default.value !== null) ? this.props.default.value : "None",
+      value: (typeof this.props.default.value !== undefined && this.props.default.value !== null) ? this.props.default.value : null,
       haschanged: false
     }
   }
@@ -70,7 +70,7 @@ class DropOption extends Component {
   }
   render() {
     let nomatches = true;
-    let d = [{text: "Geen selectie", value: "None", GUID: "00000000-0000-0000-0000-000000000000"}].concat(this.props.data);
+    let d = [{text: "Geen selectie", value: null, GUID: "00000000-0000-0000-0000-000000000000"}].concat(this.props.data);
 
     const options = d.map((data, key) => {
       let text = data.text.toUpperCase();
