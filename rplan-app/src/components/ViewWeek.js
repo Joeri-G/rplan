@@ -52,16 +52,11 @@ class Calendar extends Component {
       appointmentDay: null
     };
     this.dayClick = this.dayClick.bind(this);
+    this.refresh = this.refresh.bind(this);
   }
 
   async componentDidMount() {
-    let startdatestring = formatDate(this.props.startdate);
-    let enddatestring = formatDate(getNextDayOfWeek(this.props.startdate, 5));
-    API.get(`/appointments/${startdatestring}/${enddatestring}/${this.props.target}`).then((response) => {
-      if (response.data.succesfull) this.setState({appointments: response.data.response});
-    }).catch((error) => {
-      // blah blah, error handling and stuff
-    });
+    this.refresh();
   }
 
   calcPxOffset = (start, end) => {
@@ -112,6 +107,15 @@ class Calendar extends Component {
     });
   }
 
+  refresh = () => {
+    let startdatestring = formatDate(this.props.startdate);
+    let enddatestring = formatDate(getNextDayOfWeek(this.props.startdate, 5));
+    API.get(`/appointments/${startdatestring}/${enddatestring}/${this.props.target}`).then((response) => {
+      if (response.data.succesfull) this.setState({appointments: response.data.response});
+    }).catch((error) => {
+      // blah blah, error handling and stuff
+    });
+  }
 
   render() {
     let appointments = [ [], [], [], [], [] ];
@@ -139,7 +143,7 @@ class Calendar extends Component {
             appointmentWindow: !this.state.appointmentWindow,
             appointmentDay: null
           });
-        }} appointmentDay={this.state.appointmentDay} displayMode={this.props.mode} selectedTarget={this.state.target} /> : null }
+        }} appointmentDay={this.state.appointmentDay} displayMode={this.props.mode} selectedTarget={this.props.target} onSuccess={this.refresh} /> : null }
       </main>
     );
   }

@@ -19,15 +19,17 @@ export default class NewAppointment extends Component {
       },
       "projects": [],
       // selected values
-      class: null,
+      class: (this.props.displayMode === 'class') ? this.props.selectedTarget : null,
       classroom1: null,
       classroom2: null,
-      teacher1: null,
+      teacher1: (this.props.displayMode === 'teacher') ? this.props.selectedTarget : null,
       teacher2: null,
       project: null,
       laptops: null,
       note: null
     }
+    this.updateSelected = this.updateSelected.bind(this);
+    this.updateInp = this.updateInp.bind(this);
   }
 
   selectTimeframe = () => {
@@ -86,6 +88,36 @@ export default class NewAppointment extends Component {
     }, this.requestAvailableResources);
   }
 
+  updateSelected = (e) => {
+    let kvlist = { // list of key value pairs that map ids to values
+      teacher1Input: 'teacher1',
+      teacher2Input: 'teacher2',
+      classInput: 'class',
+      classroom1Input: 'classroom1',
+      classroom2Input: 'classroom2',
+      projectInput: 'project'
+    };
+    let value = e.target.dataset.value;
+    let id = e.target.parentElement.parentElement.getElementsByTagName('input')[0].id;
+    if (!kvlist[id]) return
+    let obj = {};
+    obj[kvlist[id]] = value;
+    this.setState(obj);
+  }
+
+  updateInp = (e) => {
+    let kvlist = {
+      laptopInput: 'laptops',
+      notesInput: 'note'
+    };
+    let value = e.target.value;
+    let id = e.target.id;
+    if (!kvlist[id]) return
+    let obj = {};
+    obj[kvlist[id]] = value;
+    this.setState(obj);
+  }
+
   selectAppointmentProperties = () => {
     return (
       <React.Fragment>
@@ -98,16 +130,16 @@ export default class NewAppointment extends Component {
               ID="teacher1Input"
               data={this.state.availability.teachers}
               title="Docent"
-              default="None"
-              valuechange={null}
+              default={{text: "Docent", value: null}}
+              valuechange={this.updateSelected}
               nodefault={false}
             /> :
             <Dropdown
               ID="classInput"
               data={this.state.availability.classes}
               title="Klas"
-              default="None"
-              valuechange={null}
+              default={{text: "Klas", value: null}}
+              valuechange={this.updateSelected}
               nodefault={false}
             />
           }
@@ -115,40 +147,75 @@ export default class NewAppointment extends Component {
             ID="teacher2Input"
             data={this.state.availability.teachers}
             title="Extra Docent"
-            default="None"
-            valuechange={null}
+            default={{text: "Extra Docent", value: null}}
+            valuechange={this.updateSelected}
             nodefault={false}
           />
           <Dropdown
             ID="classroom1Input"
             data={this.state.availability.classrooms}
             title="Lokaal"
-            default="None"
-            valuechange={null}
+            default={{text: "Lokaal", value: null}}
+            valuechange={this.updateSelected}
             nodefault={false}
           />
           <Dropdown
             ID="classroom2Input"
             data={this.state.availability.classrooms}
             title="Extra Lokaal"
-            default="None"
-            valuechange={null}
+            default={{text: "Extra Lokaal", value: null}}
+            valuechange={this.updateSelected}
             nodefault={false}
           />
           <Dropdown
             ID="projectInput"
             data={this.state.projects}
             title="Project"
-            default="None"
-            valuechange={null}
+            default={{text: "Project", value: null}}
+            valuechange={this.updateSelected}
             nodefault={false}
           />
-          <input type="number" placeholder="Laptops" id="laptopInput" onChange={null} />
+          <input type="number" placeholder="Laptops" id="laptopInput" onChange={this.updateInp} />
         </div>
-        <input type="text" placeholder="Opmerkingen" id="notesInput" onChange={null} />
-        <button className="propertyInputContinue">Opslaan</button>
+        <input type="text" placeholder="Opmerkingen" id="notesInput" onChange={this.updateInp} />
+        <button className="propertyInputContinue" onClick={this.saveAppointment}>Opslaan</button>
       </React.Fragment>
     );
+  }
+
+  saveAppointment = () => {
+    let c = encodeURIComponent(this.state.class);
+    let c1 = encodeURIComponent(this.state.classroom1);
+    let c2 = encodeURIComponent(this.state.classroom2);
+    let t1 = encodeURIComponent(this.state.teacher1);
+    let t2 = encodeURIComponent(this.state.teacher2);
+    let p = encodeURIComponent(this.state.project);
+    let l = encodeURIComponent(this.state.laptops);
+    let n = encodeURIComponent(this.state.note);
+
+    let s = encodeURIComponent(`${this.props.appointmentDay}_${this.state.startTime}`);
+    let e = encodeURIComponent(`${this.props.appointmentDay}_${this.state.endTime}`);
+
+    if (!this.state.class && (!this.state.classroom1 && !this.state.classroom2)) {
+      this.setState({message: "Tenminste 1 klas of docent is verplicht"});
+      return;
+    }
+
+    if (!this.state.project) {
+      this.setState({message: "Project is verplicht"});
+      return;
+    }
+
+    let post = `class=${c}&classroom1=${c1}&classroom2=${c2}&teacher1=${t1}&teacher2=${t2}&project=${p}&laptops=${l}&note=${n}&start=${s}&end=${e}`;
+
+    API.post(`/appointments/`, post).then((resp) => {
+      this.props.onSuccess();
+      console.log(resp);
+
+      this.props.closeCallback();
+    }).catch((error) => {
+      this.setState({message: error.response.data.message})
+    });
   }
 
   requestAvailableResources = () => {
