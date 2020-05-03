@@ -34,20 +34,20 @@ planner -> week
 SQL:
 */
 CREATE TABLE `appointments` (
-  `start` timestamp(6) NOT NULL COMMENT 'start timestamp',
-  `endstamp`  timestamp(6) NOT NULL COMMENT 'endtimestamp',
-  `teacher1` varchar(36) NOT NULL,
-  `teacher2` varchar(36) NOT NULL,
-  `class` varchar(36) NOT NULL,
-  `classroom1` varchar(36) NOT NULL,
-  `classroom2` varchar(36) NOT NULL,
-  `laptops` int(4) NOT NULL COMMENT 'laptops',
-  `project` varchar(36) NOT NULL COMMENT 'projectCode',
-  `notes` varchar(256) NOT NULL COMMENT 'notes',
-  `USER` varchar(36) NOT NULL COMMENT 'user who added entry',
-  `lastChanged` timestamp(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
-  `IP` varchar(64) NOT NULL COMMENT 'ip from where entry was added',
-  `GUID` varchar(36) NOT NULL
+  `start` timestamp(6) DEFAULT CURRENT_TIMESTAMP(6) NOT NULL COMMENT 'start timestamp',
+  `endstamp` timestamp(6) DEFAULT CURRENT_TIMESTAMP(6) NOT NULL COMMENT 'end timestamp',
+  `teacher1` varchar(36),
+  `teacher2` varchar(36),
+  `class` varchar(36),
+  `classroom1` varchar(36),
+  `classroom2` varchar(36),
+  `laptops` int(4) COMMENT 'laptops',
+  `project` varchar(36) COMMENT 'projectCode',
+  `notes` varchar(256) COMMENT 'notes',
+  `USER` varchar(36) COMMENT 'user who added entry',
+  `lastChanged` timestamp(6) DEFAULT CURRENT_TIMESTAMP(6),
+  `IP` varchar(64) COMMENT 'ip from where entry was added',
+  `GUID` varchar(36)
 ) ENGINE = InnoDB DEFAULT CHARSET = latin1;
 ALTER TABLE
   `appointments`
