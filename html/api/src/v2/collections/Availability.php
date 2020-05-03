@@ -79,12 +79,14 @@ class Availability {
       "SELECT name, teacherAvailability, GUID
       FROM teachers WHERE GUID NOT IN (
       SELECT teacher1 FROM `appointments` WHERE
-      		TIMESTAMP(start) < TIMESTAMP(:end) OR
-          TIMESTAMP(endstamp) > TIMESTAMP(:start)
+      		(TIMESTAMP(start) < TIMESTAMP(:end) OR
+          TIMESTAMP(endstamp) > TIMESTAMP(:start)) AND
+          teacher1 IS NOT NULL
       ) AND GUID NOT IN (
         SELECT teacher2 FROM `appointments` WHERE
-          TIMESTAMP(start) < TIMESTAMP(:end) OR
-          TIMESTAMP(endstamp) > TIMESTAMP(:start)
+          (TIMESTAMP(start) < TIMESTAMP(:end) OR
+          TIMESTAMP(endstamp) > TIMESTAMP(:start)) AND
+          teacher2 IS NOT NULL
       )"
     );
     $stmt->execute([
@@ -113,8 +115,9 @@ class Availability {
       "SELECT year, name, GUID
       FROM classes WHERE GUID NOT IN (
       SELECT class FROM `appointments` WHERE
-      		TIMESTAMP(start) < TIMESTAMP(:end) OR
-          TIMESTAMP(endstamp) > TIMESTAMP(:start)
+      		(TIMESTAMP(start) < TIMESTAMP(:end) OR
+          TIMESTAMP(endstamp) > TIMESTAMP(:start)) AND
+          class IS NOT NULL
       )"
     );
 
@@ -131,12 +134,14 @@ class Availability {
       "SELECT classroom, GUID
       FROM classrooms WHERE GUID NOT IN (
       SELECT classroom1 FROM `appointments` WHERE
-      		TIMESTAMP(start) < TIMESTAMP(:end) OR
-          TIMESTAMP(endstamp) > TIMESTAMP(:start)
+      		(TIMESTAMP(start) < TIMESTAMP(:end) OR
+          TIMESTAMP(endstamp) > TIMESTAMP(:start)) AND
+          classroom1 IS NOT NULL
       ) AND GUID NOT IN (
         SELECT classroom2 FROM `appointments` WHERE
-          TIMESTAMP(start) < TIMESTAMP(:end) OR
-          TIMESTAMP(endstamp) > TIMESTAMP(:start)
+          (TIMESTAMP(start) < TIMESTAMP(:end) OR
+          TIMESTAMP(endstamp) > TIMESTAMP(:start)) AND
+          classroom2 IS NOT NULL
       )"
     );
 
