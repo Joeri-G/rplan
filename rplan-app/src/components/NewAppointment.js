@@ -19,10 +19,10 @@ export default class NewAppointment extends Component {
       },
       "projects": [],
       // selected values
-      class: (this.props.displayMode === 'class') ? this.props.selectedTarget : null,
+      class: (this.props.displayMode === 'classes') ? this.props.selectedTarget : null,
       classroom1: null,
       classroom2: null,
-      teacher1: (this.props.displayMode === 'teacher') ? this.props.selectedTarget : null,
+      teacher1: (this.props.displayMode === 'teachers') ? this.props.selectedTarget : null,
       teacher2: null,
       project: null,
       laptops: null,
@@ -123,25 +123,32 @@ export default class NewAppointment extends Component {
       <React.Fragment>
         <div className="propertyInput">
           {/* display selectclass or selectteacter depending on displaymode */}
-          <input type="hidden" value={this.props.selectedTarget} id={(this.props.displayMode === 'class') ? "classInput"  : "teacher1Input"} />
           {
-            (this.props.displayMode === 'class') ?
-            <Dropdown
-              ID="teacher1Input"
-              data={this.state.availability.teachers}
-              title="Docent"
-              default={{text: "Docent", value: null}}
-              valuechange={this.updateSelected}
-              nodefault={false}
-            /> :
-            <Dropdown
-              ID="classInput"
-              data={this.state.availability.classes}
-              title="Klas"
-              default={{text: "Klas", value: null}}
-              valuechange={this.updateSelected}
-              nodefault={false}
-            />
+            (this.props.displayMode === 'class') ? (
+              <React.Fragment>
+                <input type="hidden" value={this.props.selectedTarget} id="classInput" />
+                <Dropdown
+                  ID="teacher1Input"
+                  data={this.state.availability.teachers}
+                  title="Docent"
+                  default={{text: "Docent", value: null}}
+                  valuechange={this.updateSelected}
+                  nodefault={false}
+                />
+              </React.Fragment>
+            ) : (
+              <React.Fragment>
+                <input type="hidden" value={this.props.selectedTarget} id="teacher1Input" />
+                <Dropdown
+                  ID="teacher1Input"
+                  data={this.state.availability.teachers}
+                  title="Docent"
+                  default={{text: "Docent", value: null}}
+                  valuechange={this.updateSelected}
+                  nodefault={false}
+                />
+              </React.Fragment>
+            )
           }
           <Dropdown
             ID="teacher2Input"
@@ -196,7 +203,7 @@ export default class NewAppointment extends Component {
     let s = encodeURIComponent(`${this.props.appointmentDay}_${this.state.startTime}`);
     let e = encodeURIComponent(`${this.props.appointmentDay}_${this.state.endTime}`);
 
-    if (!this.state.class && (!this.state.classroom1 && !this.state.classroom2)) {
+    if (!this.state.class && (!this.state.teacher1 && !this.state.teacher2)) {
       this.setState({message: "Tenminste 1 klas of docent is verplicht"});
       return;
     }
@@ -210,8 +217,6 @@ export default class NewAppointment extends Component {
 
     API.post(`/appointments/`, post).then((resp) => {
       this.props.onSuccess();
-      console.log(resp);
-
       this.props.closeCallback();
     }).catch((error) => {
       this.setState({message: error.response.data.error})
