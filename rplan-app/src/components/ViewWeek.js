@@ -10,35 +10,56 @@ export default class ViewWeek extends Component {
     super(props);
 
     let savedDate = (typeof localStorage.savedDate === 'string' && localStorage.savedDate !== "") ? new Date(localStorage.savedDate) : new Date();
+    let savedMode = (typeof localStorage.mode === 'string' && localStorage.mode !== '') ? localStorage.mode : 'classes';
+    let savedSelector = (typeof localStorage.selector === 'string' && localStorage.selector !== '') ? localStorage.selector : null;
+
 
     this.state = {
       currentdate: savedDate,
       startdate: getNextDayOfWeek(savedDate, 1),
-      target: '063c270a-7772-4143-8e9a-833f4ef74a18',
-      mode: "class",
+      target: savedSelector,
+      mode: savedMode,
       startHour: 7,
       endHour: 17
     };
-  }
 
-  async componentDidMount() {
-
+    this.setDate = this.setDate.bind(this);
+    this.setSelector = this.setSelector.bind(this);
   }
 
   setDate = (date) => {
-    let startdate = this.getNextDayOfWeek(date, 1);
-    let currentdate = date;
+    let d = new Date(date.target.value);
+    let startdate = getNextDayOfWeek(d, 1);
+    let currentdate = d;
     this.setState({
       startdate: startdate,
       currentdate: currentdate
     });
   }
 
+  setSelector = (mode, selector) => {
+    this.setState({
+      mode: mode,
+      target: selector
+    });
+  }
+
   render() {
     return (
       <React.Fragment>
-        <Datepicker dateCallback={null} selectorCallback={null} defaultDate={this.state.currentdate.toISOString().substring(0, 10)} />
-        <Calendar mode={this.state.mode} startdate={this.state.startdate} currentdate={this.state.currentdate} target={this.state.target} />
+        <Datepicker
+            dateCallback={this.setDate}
+            selectorCallback={this.setSelector}
+            defaultSelector={this.state.target}
+            defaultDate={this.state.currentdate.toISOString().substring(0, 10)}
+          />
+        {(this.state.target) ?
+          <Calendar
+            mode={this.state.mode}
+            startdate={this.state.startdate}
+            currentdate={this.state.currentdate}
+            target={this.state.target}
+          /> : null}
       </React.Fragment>
     );
   }
@@ -56,18 +77,19 @@ class Datepicker extends Component {
     let modeObj = {text: 'Mode', value: null};
 
     for (const m of modes)
-      if (m.value === storedMode){
+      if (m.value === storedMode) {
         modeObj = m;
         break; // we found what we're looking for, break the loop
       }
-
 
     this.state = {
       classes: [],
       teachers: [],
       mode: storedMode,
       modeObj: modeObj,
-      modes: modes
+      modes: modes,
+      selector: this.props.defaultSelector,
+      selectorObj: {text: 'Maak een keuze', value: null}
     }
     this.updateMode = this.updateMode.bind(this);
   }
@@ -75,7 +97,7 @@ class Datepicker extends Component {
   async componentDidMount() {
     // load classes
     API.get('/classes/').then((response) => {
-      if (response.data.succesfull) {
+      if (response.data.successful) {
         let data = response.data.response.map((data) => {
           let obj = {
             text: data.name,
@@ -90,10 +112,9 @@ class Datepicker extends Component {
       console.log(error);
     });
 
-
     // load teachers
     API.get('/teachers/').then((response) => {
-      if (response.data.succesfull) {
+      if (response.data.successful) {
         let data = response.data.response.map((data) => {
           let obj = {
             text: data.name,
@@ -107,6 +128,21 @@ class Datepicker extends Component {
     }).catch((error) => {
       console.log(error);
     });
+
+    // if a mode and selector are provided load the data
+    if (!this.state.mode || !this.state.selector) return;
+    API.get(`/${this.state.mode}/${this.state.selector}`).then((response) => {
+      if (!response.data.successful) return;
+      let data = response.data.response;
+      let selectorObj = {
+        text: data.name,
+        value: data.GUID,
+        GUID: data.GUID
+      };
+      this.setState({
+        selectorObj: selectorObj
+      });
+    }).catch((error) => {console.log(error)});
   }
 
   updateMode = (e) => {
@@ -120,7 +156,6 @@ class Datepicker extends Component {
 
 
   displaySelectOptions = () => {
-
     const modeDropdown = <Dropdown
       ID="modeInput"
       data={this.state.modes}
@@ -140,9 +175,15 @@ class Datepicker extends Component {
       const selectorDropdown = <Dropdown
         ID="selectorInput"
         data={data}
-        title={'Maak een keuze'}
+        title={this.state.selectorObj.text}
         default={this.state.modeObj}
-        valuechange={null}
+        valuechange={(e) => {
+          let val = e.target.dataset.value;
+          this.props.selectorCallback(this.state.mode, val);
+          // store the selector and mode in the localStorage
+          localStorage.mode = this.state.mode;
+          localStorage.selector = val;
+        }}
         nodefault={false}
         notNULL={true}
       />
@@ -162,11 +203,13 @@ class Datepicker extends Component {
   render() {
     return (
       <section className="timetableSpecifier">
-        <div className="selectSelector">
-          {this.displaySelectOptions()}
-        </div>
-        <div className="selectDate">
-          <input type="date" defaultValue={this.props.defaultDate} />
+        <div className="selectedParent">
+          <div className="selectSelector">
+            {this.displaySelectOptions()}
+          </div>
+          <div className="selectDate">
+            <input type="date" defaultValue={this.props.defaultDate} onChange={this.props.dateCallback} />
+          </div>
         </div>
       </section>
     );
@@ -179,7 +222,9 @@ class Calendar extends Component {
     this.state = {
       appointments: [],
       appointmentWindow: false,
-      appointmentDay: null
+      appointmentDay: null,
+      target: this.props.target,
+      currentdate: this.props.currentdate
     };
     this.dayClick = this.dayClick.bind(this);
     this.refresh = this.refresh.bind(this);
@@ -187,6 +232,18 @@ class Calendar extends Component {
 
   async componentDidMount() {
     this.refresh();
+  }
+
+  componentDidUpdate() {
+    // if the prop target is not equal to state target, refresh
+    if (this.props.target === this.state.target && this.props.currentdate === this.state.currentdate) return;
+    this.setState({
+      target: this.props.target,
+      currentdate: this.props.currentdate
+    }, () => {
+      // wrap this in a callback so we can be sure the new state is used
+      this.refresh();
+    });
   }
 
   calcPxOffset = (start, end) => {
@@ -241,7 +298,7 @@ class Calendar extends Component {
     let startdatestring = formatDate(this.props.startdate);
     let enddatestring = formatDate(getNextDayOfWeek(this.props.startdate, 5));
     API.get(`/appointments/${startdatestring}/${enddatestring}/${this.props.target}`).then((response) => {
-      if (response.data.succesfull) this.setState({appointments: response.data.response});
+      if (response.data.successful) this.setState({appointments: response.data.response});
     }).catch((error) => {
       // blah blah, error handling and stuff
     });
@@ -260,7 +317,7 @@ class Calendar extends Component {
       if (day > 6) break;
     }
     return (
-      <main className="viewWeek">
+      <section className="viewWeek">
         <div className="days">
           <Day appointments={appointments[0]} day={formatDate(getNextDayOfWeek(this.props.startdate, 1))} dayClick={this.dayClick} />
           <Day appointments={appointments[1]} day={formatDate(getNextDayOfWeek(this.props.startdate, 2))} dayClick={this.dayClick} />
@@ -274,7 +331,7 @@ class Calendar extends Component {
             appointmentDay: null
           });
         }} appointmentDay={this.state.appointmentDay} displayMode={this.props.mode} selectedTarget={this.props.target} onSuccess={this.refresh} /> : null }
-      </main>
+      </section>
     );
   }
 }
