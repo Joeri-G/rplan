@@ -1,17 +1,28 @@
 import React, {Component} from 'react';
 import API from '../axios-config';
 import NewAppointment from './NewAppointment';
+import ViewAppointment from './ViewAppointment';
+import Dropdown from './Dropdown';
 import './css/ViewWeek.css';
 
 export default class ViewWeek extends Component {
   constructor(props) {
     super(props);
+
+    let savedDate = (typeof localStorage.savedDate === 'string') ? new Date(localStorage.savedDate) : new Date();
+
     this.state = {
-      currentdate: new Date(),
-      startdate: getNextDayOfWeek(new Date(), 1),
+      currentdate: savedDate,
+      startdate: getNextDayOfWeek(savedDate, 1),
       target: '063c270a-7772-4143-8e9a-833f4ef74a18',
-      mode: "class"
+      mode: "class",
+      startHour: 7,
+      endHour: 17
     };
+  }
+
+  async componentDidMount() {
+
   }
 
   setDate = (date) => {
@@ -26,7 +37,7 @@ export default class ViewWeek extends Component {
   render() {
     return (
       <React.Fragment>
-        <Datepicker dateCallback={null} selectorCallback={null} />
+        <Datepicker dateCallback={null} selectorCallback={null} defaultDate={this.state.currentdate.toISOString().substring(0, 10)} />
         <Calendar mode={this.state.mode} startdate={this.state.startdate} currentdate={this.state.currentdate} target={this.state.target} />
       </React.Fragment>
     );
@@ -34,10 +45,129 @@ export default class ViewWeek extends Component {
 }
 
 class Datepicker extends Component {
+  constructor(props) {
+    super(props);
+
+    let storedMode = (typeof localStorage.mode === 'string') ? localStorage.mode : null;
+    let modes = [
+      {text: 'Klassen', value: 'classes', GUID: '1'},
+      {text: 'Docenten', 'value': 'teachers', GUID: '2'}
+    ];
+    let modeObj = {text: 'Mode', value: null};
+
+    for (const m of modes)
+      if (m.value === storedMode){
+        modeObj = m;
+        break; // we found what we're looking for, break the loop
+      }
+
+
+    this.state = {
+      classes: [],
+      teachers: [],
+      mode: storedMode,
+      modeObj: modeObj,
+      modes: modes
+    }
+    this.updateMode = this.updateMode.bind(this);
+  }
+
+  async componentDidMount() {
+    // load classes
+    API.get('/classes/').then((response) => {
+      if (response.data.succesfull) {
+        let data = response.data.response.map((data) => {
+          let obj = {
+            text: data.name,
+            value: data.GUID,
+            GUID: data.GUID
+          };
+          return obj;
+        });
+        this.setState({classes: data});
+      }
+    }).catch((error) => {
+      console.log(error);
+    });
+
+
+    // load teachers
+    API.get('/teachers/').then((response) => {
+      if (response.data.succesfull) {
+        let data = response.data.response.map((data) => {
+          let obj = {
+            text: data.name,
+            value: data.GUID,
+            GUID: data.GUID
+          };
+          return obj;
+        });
+        this.setState({teachers: data});
+      }
+    }).catch((error) => {
+      console.log(error);
+    });
+  }
+
+  updateMode = (e) => {
+    let mode = e.target.dataset.value;
+    // save mode to localStorage
+    localStorage.mode = mode;
+    if (this.state.mode !== mode) this.setState({
+      mode: mode
+    });
+  }
+
+
+  displaySelectOptions = () => {
+
+    const modeDropdown = <Dropdown
+      ID="modeInput"
+      data={this.state.modes}
+      title={this.state.modeObj.text}
+      default={this.state.modeObj}
+      valuechange={this.updateMode}
+      nodefault={false}
+      notNULL={true}
+    />
+
+    if (this.state.mode) {
+
+      let data = this.state[this.state.mode];
+
+      if (!data) data = [];
+
+      const selectorDropdown = <Dropdown
+        ID="selectorInput"
+        data={data}
+        title={'Maak een keuze'}
+        default={this.state.modeObj}
+        valuechange={null}
+        nodefault={false}
+        notNULL={true}
+      />
+
+      return (
+        <React.Fragment>
+          {modeDropdown}
+          {selectorDropdown}
+        </React.Fragment>
+      )
+    }
+
+
+    return modeDropdown;
+  }
+
   render() {
     return (
-      <section className="datepicker">
-        <h1>Datepicker, Class/Teacher And Settings</h1>
+      <section className="timetableSpecifier">
+        <div className="selectSelector">
+          {this.displaySelectOptions()}
+        </div>
+        <div className="selectDate">
+          <input type="date" defaultValue={this.props.defaultDate} />
+        </div>
       </section>
     );
   }
@@ -168,12 +298,23 @@ class Day extends Component {
 }
 
 class Appointment extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      anlargedAppointment: null
+    };
+    this.closeClick = this.closeClick.bind(this);
+  }
   randomInt = (min, max) => {
     return Math.floor(Math.random() * (max - min + 1)) + min;
   }
 
   click = () => {
-    alert(`You just pressed appointment ${this.props.data.GUID}`);
+    this.setState({anlargedAppointment: <ViewAppointment data={this.props.data} closeCallback={this.closeClick} />});
+  }
+
+  closeClick = () => {
+    this.setState({anlargedAppointment: null});
   }
 
   render() {
@@ -193,9 +334,12 @@ class Appointment extends Component {
     if (endMin.length < 2) endMin = `0${endMin}`;
 
     return (
-      <div className="appointment" style={this.style} onClick={this.click}>
-        <p className="duration">{`${startHour}:${startMin} - ${endHour}:${endMin}`}</p>
-      </div>
+      <React.Fragment>
+        <div className="appointment" style={this.style} onClick={this.click}>
+          <p className="duration">{`${startHour}:${startMin} - ${endHour}:${endMin}`}</p>
+        </div>
+        {this.state.anlargedAppointment}
+      </React.Fragment>
     );
   }
 }
