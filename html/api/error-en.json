@@ -108,5 +108,15 @@
     "id": 21,
     "http": 400,
     "msg": "Two timestamps must be supplied, separated by a slash and in 'Y-m-d_H:i' and the earliest stamp first"
+  },
+  {
+    "id": 22,
+    "http": 400,
+    "msg": "The appointment either started too early or finished too late"
+  },
+  {
+    "id": 23,
+    "http": 400,
+    "msg": "Every appointment requires a project and either a teacher or a class"
   }
 ]
