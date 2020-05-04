@@ -31,13 +31,13 @@ export default class Dropdown extends Component {
 
   render() {
     let clickCatchStyle = {
-      width: "100vw",
-      height: "100vh",
+      width: "100%",
+      height: "100%",
       position: "absolute",
       top: "0",
       left:"0",
       background: "rgba(0,0,0,0)",
-      display: (this.state.displayOptions) ? "block" : "none"
+      display: (this.state.displayOptions) ? "block" : "none",
     }
     return (
       <React.Fragment>
