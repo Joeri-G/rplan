@@ -28,6 +28,18 @@ export default class ViewAppointment extends Component {
     if (this.props.data.teacher1)       this.loadResource('teacher1', 'teachers');
     if (this.props.data.teacher2)       this.loadResource('teacher2', 'teachers');
     if (this.props.data.project)        this.loadResource('project', 'projects');
+    this.setState({
+      notes: this.props.data.notes
+    });
+
+    if (!this.props.data.project) return;
+    API.get(`/projects/${this.props.data.project}`).then((response) => {
+      if (!response.data.successful) return;
+      this.setState({
+        project: response.data.response.projectTitle
+      });
+    }).catch((error) => {console.log(error)});
+
   }
 
   loadResource = (id, coll) => {
@@ -66,6 +78,14 @@ export default class ViewAppointment extends Component {
             <span>
               <p>Extra Lokaal:</p>
               <p>{this.state.classroom2}</p>
+            </span>
+            <span>
+              <p>Project:</p>
+              <p>{this.state.project}</p>
+            </span>
+            <span>
+              <p>Opmerking:</p>
+              <p>{this.state.notes}</p>
             </span>
           </div>
         </div>
