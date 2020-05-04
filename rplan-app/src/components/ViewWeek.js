@@ -9,7 +9,7 @@ export default class ViewWeek extends Component {
   constructor(props) {
     super(props);
 
-    let savedDate = (typeof localStorage.savedDate === 'string') ? new Date(localStorage.savedDate) : new Date();
+    let savedDate = (typeof localStorage.savedDate === 'string' && localStorage.savedDate !== "") ? new Date(localStorage.savedDate) : new Date();
 
     this.state = {
       currentdate: savedDate,
