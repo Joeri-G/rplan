@@ -10,7 +10,7 @@ export default class Dropdown extends Component {
       title: this.props.title,
       displayOptions: false,
       id: this.props.ID,
-      value: (typeof this.props.default.value !== undefined && this.props.default.value !== null) ? this.props.default.value : null,
+      value: (!this.props.nodefault && typeof this.props.default.value !== undefined && this.props.default.value !== null) ? this.props.default.value : null,
       haschanged: false
     }
   }
@@ -46,7 +46,7 @@ export default class Dropdown extends Component {
         <div className="customDropdownButton">
           <button className="optionButton titleButton" onClick={this.toggleOptions}>{(this.state.haschanged) ? this.state.title : this.props.title}</button>
           <input type="hidden" value={(!this.state.value) ? "" : this.state.value} id={this.state.id} />
-          <DropOption display={this.state.displayOptions} data={this.props.data} callback={this.setValue} />
+          <DropOption display={this.state.displayOptions} data={this.props.data} callback={this.setValue} notNULL={this.props.notNULL} />
         </div>
       </React.Fragment>
     )
@@ -72,7 +72,10 @@ class DropOption extends Component {
     let nomatches = true;
     let d = [{text: "Geen selectie", value: null, GUID: "00000000-0000-0000-0000-000000000000"}].concat(this.props.data);
 
+    if (this.props.notNULL) d = this.props.data;
+
     const options = d.map((data, key) => {
+      if (!data) return null;
       let text = data.text.toUpperCase();
       let filter = this.state.filter;
       data.display = false;
