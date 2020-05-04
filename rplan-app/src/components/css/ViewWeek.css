@@ -1,11 +1,52 @@
-.datepicker, .viewWeek {
+.timetableSpecifier {
   width: var(--main-width);
-  margin: 6em auto 0;
+  margin: 6rem auto 0;
 }
 
-.datepicker {
-  border: 1px solid #000;
-  text-align: center;
+.viewWeek {
+  width: var(--main-width);
+  margin: 3rem auto 0;
+}
+
+.timetableSpecifier {
+  height: 100%;
+  /* font-size: 1.5em; */
+}
+
+.timetableSpecifier .customDropdownButton,
+.timetableSpecifier .customDropdownButtonOptions {
+  width: 150px;
+}
+
+.timetableSpecifier .customDropdownButton {
+  display: inline-block;
+  margin: 0 1em 0 0;
+}
+
+.selectSelector {
+  margin-left: 12em;
+  float: left;
+}
+
+.selectedParent {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.selectDate {
+  margin-right: 12em;
+}
+
+.selectDate input[type=date] {
+  box-shadow: 0 0 2px 2px rgba(50,50,50,0.5);
+  border: 0;
+  height: 2rem;
+  font-size: 1.5rem;
+}
+
+.selectDate input[type=date]:hover, .selectDate input[type=date]:focus {
+  box-shadow: 0 0 6px 3px rgba(50,50,50,0.5);
 }
 
 .viewWeek > .days {
@@ -21,6 +62,10 @@
   height: var(--day-height);
 }
 
+.appointment:hover, .appointment:focus {
+  box-shadow: 0 0 6px 3px rgba(50,50,50,0.5);
+}
+
 .dayComponent > p {
   text-align: center;
   font-size: 1.5em;
@@ -29,11 +74,12 @@
 
 .appointment > .duration {
   text-align: center;
-  font-size: 1.5em;
+  font-size: 1.25em;
   margin: 0.5em 0;
 }
 
 .appointment {
+  box-shadow: 0 0 2px 2px rgba(50,50,50,0.5);
   padding: 0.25;
   z-index: 2;
   position: absolute;

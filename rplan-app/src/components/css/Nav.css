@@ -11,6 +11,11 @@ nav {
   display: table;
   table-layout: fixed;
   float: right;
+  box-shadow: 0 0 2px 2px rgba(50,50,50,0.5);
+}
+
+.navInner:hover, .navInner:focus {
+  box-shadow: 0 0 6px 3px rgba(50,50,50,0.5);
 }
 
 nav button {

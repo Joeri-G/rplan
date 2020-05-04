@@ -23,3 +23,23 @@
   border-radius: 24px;
   padding: 32px;
 }
+
+.propertyList {
+  width: 100%;
+  display: table;
+  table-layout: fixed;
+}
+
+.propertyList span {
+  display: table-row;
+}
+
+.propertyList p {
+  display: table-cell;
+  padding: 0 0.25em;
+}
+
+.propertyList p:nth-last-of-type(even) {
+  text-align: right;
+  padding: 0 0.25em 0 0;
+}
