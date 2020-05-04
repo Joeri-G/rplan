@@ -13,7 +13,7 @@ class ResponseHandler {
   function __construct() {
     $this->loadErrors();
     $this->response = [
-      "succesfull" => false,
+      "successful" => false,
       "error" =>  $this->error[0]["msg"],
       "code" => 0
     ];
@@ -52,7 +52,7 @@ class ResponseHandler {
     if (!$this->loadedErrors) $this->loadErrors();
     if (!isset($this->error[$err])) $err = 0;
     $this->response = [
-      "succesfull" => false,
+      "successful" => false,
       "error" => $this->error[$err]["msg"],
       "code" => $err
     ];
@@ -63,7 +63,7 @@ class ResponseHandler {
   public function sendSuccess($resp) {
     http_response_code(200);
     $this->response = [
-      "succesfull" => true,
+      "successful" => true,
       "response" => $resp
     ];
     return $this->sendResponse();
@@ -84,7 +84,7 @@ class ResponseHandler {
       echo json_encode($this->response);
     }
     catch (\Exception $e) {
-      echo json_encode(["succesfull" => false, "error" => "Could not parse response\n$e", "code" => 1]);
+      echo json_encode(["successful" => false, "error" => "Could not parse response\n$e", "code" => 1]);
       return false;
     }
     return true;

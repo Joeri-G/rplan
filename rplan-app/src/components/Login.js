@@ -77,7 +77,7 @@ class Schoolselect extends Component {
   async componentDidMount() {
     // load the available environments
     API.get('/conf/clients').then((response) => {
-      if (response.data.succesfull) {
+      if (response.data.successful) {
         let data = [];
         for (const d of response.data.response) {
           data.push({
