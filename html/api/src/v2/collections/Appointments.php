@@ -42,13 +42,13 @@ class Appointments {
         $this->add();
         break;
 
-      case 'DELETE':  //delete one or all appointments (admin)
-        $this->delete();
-        break;
-
-      case 'PUT': //update an appointment (admin)
-        $this->update();
-        break;
+      // case 'DELETE':  //delete one or all appointments (admin)
+      //   $this->delete();
+      //   break;
+      //
+      // case 'PUT': //update an appointment (admin)
+      //   $this->update();
+      //   break;
 
       default:
         $this->response->sendError(11);
@@ -90,7 +90,6 @@ class Appointments {
 
   private function listTimestampGUID(string $start = "2000-01-01", string $end = "2000-01-01", string $GUID = null) {
     if (!$this->validateDate($start) || !$this->validateDate($end) || !$this->request->isValidGUID($GUID)) {
-      var_dump();
       $this->response->sendError(20);
       return false;
     }
@@ -199,6 +198,137 @@ class Appointments {
 
   private function add() {
     // yay, lots of input checks
+    // make sure the values are set
+    if (!$this->checkPost([
+      'class',
+      'classroom1',
+      'classroom2',
+      'teacher1',
+      'teacher2',
+      'project',
+      'laptops',
+      'note',
+      'start',
+      'end'
+    ])) {
+      $this->response->sendError(8);
+      return;
+    }
+
+    // if the given value is not a valid GUID make it null
+    $class = ($this->request->isValidGUID($_POST['class'])) ? $_POST['class'] : null;
+    $classroom1 = ($this->request->isValidGUID($_POST['classroom1'])) ? $_POST['classroom1'] : null;
+    $classroom2 = ($this->request->isValidGUID($_POST['classroom2'])) ? $_POST['classroom2'] : null;
+    $teacher1 = ($this->request->isValidGUID($_POST['teacher1'])) ? $_POST['teacher1'] : null;
+    $teacher2 = ($this->request->isValidGUID($_POST['teacher2'])) ? $_POST['teacher2'] : null;
+    $project = ($this->request->isValidGUID($_POST['project'])) ? $_POST['project'] : null;
+    $laptops = ((int) $_POST['laptops'] > 0) ? $_POST['laptops'] : 0;
+    $note = $_POST['note'];
+
+    $start = $_POST['start'];
+    $end = $_POST['end'];
+
+    $GUID = $this->db->generateGUID();
+
+    // make sure the appointment contains a project and a teacher or class
+    if (!$project || !($class || $teacher1 || $teacher2)) {
+      $this->response->sendError(23);
+      return;
+    }
+
+    // do input checks
+
+    $s = \DateTime::createFromFormat('Y-m-d_H:i', $start);
+    $e = \DateTime::createFromFormat('Y-m-d_H:i', $end);
+    // make sure the first date is smaller than the second
+
+    if ($e->getTimestamp() <= $s->getTimestamp()) {
+      $this->response->sendError(21);
+      return;
+    }
+
+    // load settings
+    $settings = $this->db->loadSettings();
+
+    // check for startHour and endHour
+    $starthour = (isset($settings['startHour'])) ? (int) $settings['startHour']['value'] : 0;
+    $endhour = (isset($settings['endHour'])) ? (int) $settings['endHour']['value'] : 0;
+
+    if ((int)$s->format('G') < $starthour || (int)$e->format('G') >= $endhour) {
+      $this->response->sendError(22);
+      return;
+    }
+
+    // make sure the resources are available
+    if (!$this->checkClassAvailability()) {
+      return;
+    }
+
+
+    $stmt = $this->conn->prepare(
+      "INSERT INTO appointments (
+        start,
+        endstamp,
+        teacher1,
+        teacher2,
+        class,
+        classroom1,
+        classroom2,
+        laptops,
+        project,
+        notes,
+        USER,
+        IP,
+        GUID
+      ) VALUES (
+        :start,
+        :endstamp,
+        :teacher1,
+        :teacher2,
+        :class,
+        :classroom1,
+        :classroom2,
+        :laptops,
+        :project,
+        :notes,
+        :USER,
+        :IP,
+        :GUID
+      )"
+    );
+
+    $stmt->execute([
+      'start' => $start,
+      'endstamp' => $end,
+      'teacher1' => $teacher1,
+      'teacher2' => $teacher1,
+      'class' => $class,
+      'classroom1' => $classroom1,
+      'classroom2' => $classroom2,
+      'laptops' => $laptops,
+      'project' => $project,
+      'notes' => $note,
+      'USER' => $_SESSION['GUID'],
+      'IP' => $_SERVER['REMOTE_ADDR'],
+      'GUID' => $GUID
+    ]);
+
+    $data = [
+      'start' => $start,
+      'endstamp' => $end,
+      'teacher1' => $teacher1,
+      'teacher2' => $teacher1,
+      'class' => $class,
+      'classroom1' => $classroom1,
+      'classroom2' => $classroom2,
+      'laptops' => $laptops,
+      'project' => $project,
+      'notes' => $note,
+      'GUID' => $GUID
+    ];
+
+    $this->response->sendSuccess($data);
+    return true;
   }
 
   private function update() {
@@ -209,4 +339,15 @@ class Appointments {
 
   }
 
+  private function checkPost($keys = []) {
+    foreach ($keys as $key) {
+      if (!isset($_POST[$key]))
+        return false;
+    }
+    return true;
+  }
+
+  private function checkClassAvailability() {
+    return true;
+  }
 }
