@@ -12,6 +12,7 @@ class Database {
   public $conn = null;
 
   public $clients = null;
+  public $settings = [];
 
   public $tables = ["users"];
 
@@ -116,6 +117,20 @@ class Database {
       }
     }
     return true;
+  }
+
+  // function used to load all active settings from the settings table and store them in $this->settings
+  public function loadSettings() {
+    $stmt = $this->conn->prepare("SELECT `key`, `value`, `GUID` FROM settings WHERE active = 1");
+    $stmt->execute();
+
+    $data =  $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+    foreach ($data as $setting) {
+      $key = $setting['key'];
+      $this->settings[$key] = $setting;
+    }
+    return $this->settings;
   }
 
   /**
