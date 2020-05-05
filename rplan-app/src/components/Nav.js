@@ -11,7 +11,7 @@ export default class Nav extends Component {
             <button onClick={this.props.setmode} data-target="projects">Projecten</button>
             <button onClick={this.props.setmode} data-target="panel">Panel</button>
             <button onClick={() => {
-              localStorage.api_key = null;
+              localStorage.clear(); 
               this.props.updateLogin();
             }}>Logout</button>
           </div>
