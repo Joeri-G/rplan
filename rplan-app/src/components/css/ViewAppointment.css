@@ -28,6 +28,9 @@
   width: 100%;
   display: table;
   table-layout: fixed;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .propertyList span {
@@ -42,4 +45,31 @@
 .propertyList p:nth-last-of-type(even) {
   text-align: right;
   padding: 0 0.25em 0 0;
+}
+
+.duration {
+  text-align: center;
+  font-size: 1.5em;
+  margin-bottom: 1em;
+}
+
+.actionButtons {
+  z-index: 2;
+  position: absolute;
+  top: 2em;
+  right: 2em;
+}
+
+.actionButtons button:first-of-type {
+  margin: 0 0.5em 0 0;
+}
+
+.actionButtons button {
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.actionButtons img {
+  height: 1.25em;
 }
