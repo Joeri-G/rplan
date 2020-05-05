@@ -1,8 +1,6 @@
 nav {
   position: fixed;
   top: 0;
-  width: 100%;
-  z-index: 2;
 }
 
 .navInner {
@@ -11,7 +9,9 @@ nav {
   display: table;
   table-layout: fixed;
   float: right;
+  right: 0;
   box-shadow: 0 0 2px 2px rgba(50,50,50,0.5);
+  position: fixed;
 }
 
 .navInner:hover, .navInner:focus {
