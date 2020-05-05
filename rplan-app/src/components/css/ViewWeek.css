@@ -113,3 +113,14 @@
   z-index: 0;
   background: var(--appointment-bg-color);
 }
+
+.propertyList p {
+  display: table-cell;
+  padding: 0 0.25em;
+}
+
+.propertyList {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
