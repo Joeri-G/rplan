@@ -51,13 +51,42 @@ export default class ViewAppointment extends Component {
     }).catch((error) => {console.log(error)});
   }
 
+  edit = () => {
+    alert('Working on it');
+  }
+
+  delete = () => {
+    if (!window.confirm("Weet u zeker dat u deze afspraak wilt verwijderen? (Dit is kan niet ongedaan worden gemaakt)")) return;
+    API.delete(`/appointments/${this.props.data.GUID}`).then((response)=>{
+      this.props.refreshCallback();
+      this.props.closeCallback();
+    }).catch(error=>console.log);
+  }
+
   modalContent = () => {
+    let startHour = new Date(this.props.data.startTimestamp).getHours().toString();
+    let startMin = new Date(this.props.data.startTimestamp).getMinutes().toString();
+    if (startHour.length < 2) startHour = `0${startHour}`;
+    if (startMin.length < 2) startMin = `0${startMin}`;
+
+    let endHour = new Date(this.props.data.endTimestamp).getHours().toString();
+    let endMin = new Date(this.props.data.endTimestamp).getMinutes().toString();
+    if (endHour.length < 2) endHour = `0${endHour}`;
+    if (endMin.length < 2) endMin = `0${endMin}`;
+
     return (
       <React.Fragment>
         <div className="appointmentModal" onClick={this.props.closeCallback}></div>
         <div className="appointmentModalContent">
-          <p>TEST</p>
-
+          <p className="duration">{`${startHour}:${startMin} - ${endHour}:${endMin}`}</p>
+          <div className="actionButtons">
+            <button>
+              <img src={`${process.env.PUBLIC_URL}/images/edit.svg`} alt="Edit" onClick={this.edit} />
+            </button>
+            <button>
+              <img src={`${process.env.PUBLIC_URL}/images/closeBlack.svg`} alt="Delete" onClick={this.delete} />
+            </button>
+          </div>
           <div className="propertyList">
             <span>
               <p>Klas:</p>
