@@ -28,9 +28,12 @@ export default class ViewWeek extends Component {
   }
 
   setDate = (date) => {
-    let d = new Date(date.target.value);
+    let d = new Date(date);
     let startdate = getNextDayOfWeek(d, 1);
     let currentdate = d;
+
+    localStorage.savedDate = currentdate;
+
     this.setState({
       startdate: startdate,
       currentdate: currentdate
@@ -89,7 +92,8 @@ class Datepicker extends Component {
       modeObj: modeObj,
       modes: modes,
       selector: this.props.defaultSelector,
-      selectorObj: {text: 'Maak een keuze', value: null}
+      selectorObj: {text: 'Maak een keuze', value: null},
+      dateValue: this.props.defaultDate
     }
     this.updateMode = this.updateMode.bind(this);
   }
@@ -200,6 +204,17 @@ class Datepicker extends Component {
     return modeDropdown;
   }
 
+  changeWeek = (w) => {
+    let weekInc = w * 7;
+    let d = new Date(this.state.dateValue);
+    d.setDate(d.getDate() + weekInc);
+    console.log(d);
+    let dateString = d.toISOString().substring(0, 10);
+    console.log(dateString);
+    this.setState({dateValue: dateString});
+    this.props.dateCallback(dateString);
+  }
+
   render() {
     return (
       <section className="timetableSpecifier">
@@ -208,7 +223,12 @@ class Datepicker extends Component {
             {this.displaySelectOptions()}
           </div>
           <div className="selectDate">
-            <input type="date" defaultValue={this.props.defaultDate} onChange={this.props.dateCallback} />
+            <button onClick={()=>this.changeWeek(-1)}>&lt;</button>
+            <input type="date" value={this.state.dateValue} onChange={(e) => {
+              if (this.state.dateValue !== e.target.value) this.setState({dateValue: e.target.value});
+              this.props.dateCallback(e.target.value);}
+            } />
+            <button onClick={()=>this.changeWeek(+1)}>&gt;</button>
           </div>
         </div>
       </section>
@@ -404,7 +424,7 @@ class Appointment extends Component {
 // https://codereview.stackexchange.com/a/33532
 function getNextDayOfWeek(date, dayOfWeek) {
   var resultDate = new Date(date.getTime());
-  resultDate.setDate(date.getDate() + (7 + dayOfWeek - date.getDay()) % 7);
+  resultDate.setDate(date.getDate() + (dayOfWeek - date.getDay()) % 7);
   return resultDate;
 }
 

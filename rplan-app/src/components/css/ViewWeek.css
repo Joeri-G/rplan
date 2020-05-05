@@ -49,6 +49,29 @@
   box-shadow: 0 0 6px 3px rgba(50,50,50,0.5);
 }
 
+.selectDate > button {
+  font-size: 1.25em;
+  margin: 0 0.5em;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.selectDate > button:hover, .selectDate > button:focus {
+  color: #fff;
+  text-shadow:
+    /* Outline */
+    -1px -1px 0 #000000,
+    1px -1px 0 #000000,
+    -1px 1px 0 #000000,
+    1px 1px 0 #000000,
+    -1px 0 0 #000000,
+    1px 0 0 #000000,
+    0 0px 0 #000000,
+    0 -0px 0 #000000;
+}
+
 .viewWeek > .days {
   margin: 2em auto;
   display: grid;
