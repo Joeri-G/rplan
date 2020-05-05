@@ -42,9 +42,9 @@ class Appointments {
         $this->add();
         break;
 
-      // case 'DELETE':  //delete one or all appointments (admin)
-      //   $this->delete();
-      //   break;
+      case 'DELETE':  //delete one or all appointments (admin)
+        $this->delete();
+        break;
       //
       // case 'PUT': //update an appointment (admin)
       //   $this->update();
@@ -223,7 +223,7 @@ class Appointments {
     $teacher2 = ($this->request->isValidGUID($_POST['teacher2'])) ? $_POST['teacher2'] : null;
     $project = ($this->request->isValidGUID($_POST['project'])) ? $_POST['project'] : null;
     $laptops = ((int) $_POST['laptops'] > 0) ? $_POST['laptops'] : 0;
-    $note = $_POST['note'];
+    $note = ($_POST['note'] !== 'null') ? $_POST['note'] : "";
 
     $start = $_POST['start'];
     $end = $_POST['end'];
@@ -336,7 +336,20 @@ class Appointments {
   }
 
   private function delete() {
+    // make sure the user has the required permissions
+    if ($_SESSION['userLVL'] < 2) {
+      $this->response->sendError(9);
+      return;
+    }
 
+    if (!$this->request->isValidGUID($this->selector)) {
+      $this->response->sendError(7);
+      return;
+    }
+
+    $stmt = $this->conn->prepare('DELETE FROM appointments WHERE GUID = :GUID');
+    $stmt->execute(['GUID' => $this->selector]);
+    $this->response->sendSuccess(null);
   }
 
   private function checkPost($keys = []) {
