@@ -9,7 +9,7 @@ export default class ViewWeek extends Component {
   constructor(props) {
     super(props);
 
-    let savedDate = (typeof localStorage.savedDate === 'string' && localStorage.savedDate !== "") ? new Date(localStorage.savedDate) : new Date();
+    let savedDate = (typeof localStorage.savedDate === 'string' && localStorage.savedDate !== "" && !isNaN(new Date(localStorage.savedDate))) ? new Date(localStorage.savedDate) : new Date();
     let savedMode = (typeof localStorage.mode === 'string' && localStorage.mode !== '') ? localStorage.mode : 'classes';
     let savedSelector = (typeof localStorage.selector === 'string' && localStorage.selector !== '') ? localStorage.selector : null;
 
@@ -326,31 +326,38 @@ class Calendar extends Component {
 
   render() {
     let appointments = [ [], [], [], [], [] ];
-    let day = 1;
     let start, ap;
-    for (var i = 0; i < this.state.appointments.length; i++) {
-      ap = this.state.appointments[i];
-      start = new Date(ap.start.slice(0, 10)); // first 10 chars are an ISO compatible date string
-      // check if the date is equal to the day date
-      if (Date.parse(start) === Date.parse(getNextDayOfWeek(start, day + 1))) day++;
-      appointments[day-1].push(this.parseday(ap));
-      if (day > 6) break;
-    }
+    // loop through appointments
+    for (const ap of this.state.appointments) {
+      var dayArrOffset = 0; // allways start with an offset of 0
+      var appointmentStart = Date.parse(ap.start.slice(0, 10)); // make the startTimestamp into a UNIX timestamp
+      while (true) {
+        // parse the day of the week that we are going to compare the appointment against (+1 because js thinks weeks start at sunday)
+        var dayStart = Date.parse(getNextDayOfWeek(new Date(appointmentStart), dayArrOffset + 1));
+        // if we found a match push the appointment into the desired array and break the loop
+        if (appointmentStart === dayStart) {
+          appointments[dayArrOffset].push(this.parseday(ap));
+          break;
+        }
+        dayArrOffset++;
+        if (dayArrOffset > 6) break; // small sageguard to prevent infinite loops when the timestamp is invalid
+      }
+    };
     return (
       <section className="viewWeek">
         <div className="days">
-          <Day appointments={appointments[0]} day={formatDate(getNextDayOfWeek(this.props.startdate, 1))} dayClick={this.dayClick} />
-          <Day appointments={appointments[1]} day={formatDate(getNextDayOfWeek(this.props.startdate, 2))} dayClick={this.dayClick} />
-          <Day appointments={appointments[2]} day={formatDate(getNextDayOfWeek(this.props.startdate, 3))} dayClick={this.dayClick} />
-          <Day appointments={appointments[3]} day={formatDate(getNextDayOfWeek(this.props.startdate, 4))} dayClick={this.dayClick} />
-          <Day appointments={appointments[4]} day={formatDate(getNextDayOfWeek(this.props.startdate, 5))} dayClick={this.dayClick} />
+          <Day appointments={appointments[0]} day={formatDate(getNextDayOfWeek(this.props.startdate, 1))} dayClick={this.dayClick} refreshCallback={this.refresh} />
+          <Day appointments={appointments[1]} day={formatDate(getNextDayOfWeek(this.props.startdate, 2))} dayClick={this.dayClick} refreshCallback={this.refresh} />
+          <Day appointments={appointments[2]} day={formatDate(getNextDayOfWeek(this.props.startdate, 3))} dayClick={this.dayClick} refreshCallback={this.refresh} />
+          <Day appointments={appointments[3]} day={formatDate(getNextDayOfWeek(this.props.startdate, 4))} dayClick={this.dayClick} refreshCallback={this.refresh} />
+          <Day appointments={appointments[4]} day={formatDate(getNextDayOfWeek(this.props.startdate, 5))} dayClick={this.dayClick} refreshCallback={this.refresh} />
         </div>
         { this.state.appointmentWindow ? <NewAppointment closeCallback={() => {
           this.setState({
             appointmentWindow: !this.state.appointmentWindow,
             appointmentDay: null
           });
-        }} appointmentDay={this.state.appointmentDay} displayMode={this.props.mode} selectedTarget={this.props.target} onSuccess={this.refresh} /> : null }
+        }} appointmentDay={this.state.appointmentDay} displayMode={this.props.mode} selectedTarget={this.props.target} refreshCallback={this.refresh} onSuccess={this.refresh} /> : null }
       </section>
     );
   }
@@ -365,7 +372,7 @@ class Day extends Component {
         <p>{getDay(new Date(this.props.day))}</p>
         <div className="dayCover">
           {this.props.appointments.map((appointment) => {
-            return <Appointment key={appointment.GUID} data={appointment} />
+            return <Appointment key={appointment.GUID} data={appointment} refreshCallback={this.props.refreshCallback} />
           })}
         </div>
         <div className="day" onClick={() => {this.props.dayClick(this.props.day)}}></div>
@@ -378,16 +385,53 @@ class Appointment extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      anlargedAppointment: null
+      anlargedAppointment: null,
+      class: null,
+      classroom1: null,
+      classroom2: null,
+      teacher1: null,
+      teacher2: null,
+      project: null,
+      notes: null
     };
     this.closeClick = this.closeClick.bind(this);
+  }
+  async componentDidMount() {
+    // now we're going to load all the data of the resources
+    if (this.props.data.class)          this.loadResource('class', 'classes');
+    if (this.props.data.classroom1)     this.loadResource('classroom1', 'classrooms');
+    if (this.props.data.classroom2)     this.loadResource('classroom2', 'classrooms');
+    if (this.props.data.teacher1)       this.loadResource('teacher1', 'teachers');
+    if (this.props.data.teacher2)       this.loadResource('teacher2', 'teachers');
+    if (this.props.data.project)        this.loadResource('project', 'projects');
+    this.setState({
+      notes: this.props.data.notes
+    });
+
+    if (!this.props.data.project) return;
+    API.get(`/projects/${this.props.data.project}`).then((response) => {
+      if (!response.data.successful) return;
+      this.setState({
+        project: response.data.response.projectTitle
+      });
+    }).catch((error) => {console.log(error)});
+
+  }
+
+  loadResource = (id, coll) => {
+    API.get(`/${coll}/${this.props.data[id]}`).then((response) => {
+      if (!response.data.successful) return;
+      let obj = {};
+      obj[id] = response.data.response.name
+      this.setState(obj);
+    }).catch((error) => {console.log(error)});
   }
   randomInt = (min, max) => {
     return Math.floor(Math.random() * (max - min + 1)) + min;
   }
 
   click = () => {
-    this.setState({anlargedAppointment: <ViewAppointment data={this.props.data} closeCallback={this.closeClick} />});
+    this.setState({anlargedAppointment: <ViewAppointment data={this.props.data} closeCallback={this.closeClick} refreshCallback={this.props.refreshCallback} />});
   }
 
   closeClick = () => {
@@ -410,10 +454,49 @@ class Appointment extends Component {
     if (endHour.length < 2) endHour = `0${endHour}`;
     if (endMin.length < 2) endMin = `0${endMin}`;
 
+    // if the object is too small to display the text, hide it
+    if (this.props.data.duration < 200) return (<React.Fragment>
+      <div className="appointment" style={this.style} onClick={this.click}>
+        {(this.props.data.duration > 50) ? <p className="duration">{`${startHour}:${startMin} - ${endHour}:${endMin}`}</p> : null}
+      </div>
+      {this.state.anlargedAppointment}
+    </React.Fragment>);
+
+
     return (
       <React.Fragment>
         <div className="appointment" style={this.style} onClick={this.click}>
           <p className="duration">{`${startHour}:${startMin} - ${endHour}:${endMin}`}</p>
+          <div className="propertyList">
+            <span>
+              <p>Klas:</p>
+              <p>{this.state.class}</p>
+            </span>
+            <span>
+              <p>Docent:</p>
+              <p>{this.state.teacher1}</p>
+            </span>
+            <span>
+              <p>Extra Docent:</p>
+              <p>{this.state.teacher2}</p>
+            </span>
+            <span>
+              <p>Lokaal:</p>
+              <p>{this.state.classroom1}</p>
+            </span>
+            <span>
+              <p>Extra Lokaal:</p>
+              <p>{this.state.classroom2}</p>
+            </span>
+            <span>
+              <p>Project:</p>
+              <p>{this.state.project}</p>
+            </span>
+            <span>
+              <p>Opmerking:</p>
+              <p>{this.state.notes}</p>
+            </span>
+          </div>
         </div>
         {this.state.anlargedAppointment}
       </React.Fragment>
