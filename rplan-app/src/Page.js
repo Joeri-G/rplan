@@ -11,7 +11,11 @@ export default class Home extends Component {
     this.state = {
       loggedin: true,
       userdata: null,
-      target: (typeof localStorage.displaymode === "string") ? localStorage.displaymode : "week"
+      target: (typeof localStorage.displaymode === "string") ? localStorage.displaymode : "week",
+      appConfig: {
+        startHour: 7,
+        endHour: 17
+      }
     }
     this.updateLogin = this.updateLogin.bind(this);
     this.setmode = this.updateLogin.bind(this);
@@ -28,7 +32,7 @@ export default class Home extends Component {
         <Nav updateLogin={this.updateLogin} setmode={this.setmode} />
         {
           // if the user isn't loggedin show the login screen
-          this.state.loggedin ? <App userdata={this.state.userdata} displaymode={this.state.target} /> : <Login updateLogin={this.updateLogin} />
+          this.state.loggedin ? <App userdata={this.state.userdata} displaymode={this.state.target} appConfig={this.state.appConfig} /> : <Login updateLogin={this.updateLogin} />
         }
         <Footer />
       </React.Fragment>)

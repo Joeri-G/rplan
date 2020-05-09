@@ -13,7 +13,7 @@ export default class App extends Component {
   render() {
     return (
       <main>
-        {this.props.displaymode ? <ViewWeek /> : null}
+        {this.props.displaymode ? <ViewWeek appConfig={this.props.appConfig} /> : null}
       </main>
     );
   }
