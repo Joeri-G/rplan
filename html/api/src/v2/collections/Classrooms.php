@@ -71,19 +71,19 @@ class Classrooms {
     if ($this->selector === "*") {
       //is user is admin return more data
       if ($_SESSION["userLVL"] >= 3) {
-        $stmt = $this->conn->prepare("SELECT classroom, userCreate, lastChanged, GUID FROM classrooms ORDER BY classroom");
+        $stmt = $this->conn->prepare("SELECT name, userCreate, lastChanged, GUID FROM classrooms ORDER BY name");
       }
       else {
-        $stmt = $this->conn->prepare("SELECT classroom, GUID FROM classrooms ORDER BY classroom");
+        $stmt = $this->conn->prepare("SELECT name, GUID FROM classrooms ORDER BY name");
       }
     }
     else {
       //is user is admin return more data
       if ($_SESSION["userLVL"] >= 3) {
-        $stmt = $this->conn->prepare("SELECT classroom, userCreate, lastChanged, GUID FROM classrooms WHERE GUID = :id LIMIT 1");
+        $stmt = $this->conn->prepare("SELECT name, userCreate, lastChanged, GUID FROM classrooms WHERE GUID = :id LIMIT 1");
       }
       else {
-        $stmt = $this->conn->prepare("SELECT classroom, GUID FROM classrooms WHERE GUID = :id LIMIT 1");
+        $stmt = $this->conn->prepare("SELECT name, GUID FROM classrooms WHERE GUID = :id LIMIT 1");
       }
       $stmt->bindParam("id", $this->selector);
     }
@@ -100,19 +100,19 @@ class Classrooms {
   }
 
   private function add() {
-    $keys = ["classroom"];
+    $keys = ["name"];
     if (!$this->request->POSTisset($keys)) {
       $this->response->sendError(8);
       return false;
     }
 
-    $classroom = $_POST["classroom"];
+    $name = $_POST["name"];
     $userCreate = $_SESSION["GUID"];
     $GUID = $this->db->generateGUID();
 
-    $stmt = $this->conn->prepare("INSERT INTO classrooms (classroom, userCreate, GUID) VALUES (:classroom, :userCreate, :GUID)");
+    $stmt = $this->conn->prepare("INSERT INTO classrooms (name, userCreate, GUID) VALUES (:name, :userCreate, :GUID)");
     $data = [
-      "classroom" => $classroom,
+      "name" => $name,
       "userCreate" => $userCreate,
       "GUID" => $GUID
     ];
@@ -146,7 +146,7 @@ class Classrooms {
   public function update() {
     parse_str(file_get_contents("php://input"), $_PUT);
     //because the data is provided via a PUT request we cannot acces the data in the body through the $_POST variable and we have to manually parse and store it
-    $keys = ["classroom"];
+    $keys = ["name"];
     if (!$this->request->PUTisset($keys)) {
       $this->response->sendError(8);
       return false;
@@ -164,12 +164,12 @@ class Classrooms {
       $this->response->sendError(9);
       return false;
     }
-    $classroom = $_PUT["classroom"];
+    $name = $_PUT["name"];
     $userCreate = $_SESSION["GUID"];
     $GUID = $this->selector;
-    $stmt = $this->conn->prepare("UPDATE classrooms SET classroom = :classroom, userCreate = :userCreate, lastChanged = current_timestamp WHERE GUID = :GUID");
+    $stmt = $this->conn->prepare("UPDATE classrooms SET name = :name, userCreate = :userCreate, lastChanged = current_timestamp WHERE GUID = :GUID");
     $data = [
-      "classroom" => $classroom,
+      "name" => $name,
       "userCreate" => $userCreate,
       "GUID" => $GUID
     ];

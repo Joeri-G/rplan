@@ -64,7 +64,7 @@ ADD
   PRIMARY KEY (`GUID`);
 
 CREATE TABLE `classrooms` (
-  `classroom` varchar(16) NOT NULL,
+  `name` varchar(16) NOT NULL,
   `userCreate` varchar(36) NOT NULL COMMENT 'GUID of user that added the class',
   `lastChanged` timestamp(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
   `GUID` varchar(36) NOT NULL
