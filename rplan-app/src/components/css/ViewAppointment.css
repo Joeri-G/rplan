@@ -74,8 +74,8 @@
   height: 1.25em;
 }
 
-.editOptions input {
+.editOptions input[type=text], .editOptions input[type=number] {
   font-size: 1em;
-  padding: 0.25em 0.5em !important; /* else it might collide with other styles */
+  padding: 0.25em 0.5em;/* else it might collide with other styles */
   margin: 0.25em;
 }
