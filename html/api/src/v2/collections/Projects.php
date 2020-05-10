@@ -61,6 +61,10 @@ class Projects {
 
 
   private function list() {
+    if ($_SESSION['userLVL'] < 1) {
+      $this->response->sendError(9);
+      return;
+    }
     //check selector for validity
     if (!$this->request->checkSelector()) {
       $this->response->sendError(6);
@@ -100,6 +104,10 @@ class Projects {
   }
 
   private function add() {
+    if ($_SESSION['userLVL'] < 3) {
+      $this->response->sendError(9);
+      return;
+    }
     $keys = ["projectTitle", "projectCode", "projectDescription", "projectInstruction", "responsibleTeacher"];
     if (!$this->request->POSTisset($keys)) {
       $this->response->sendError(8);
@@ -165,6 +173,10 @@ class Projects {
   }
 
   public function update() {
+    if ($_SESSION['userLVL'] < 3) {
+      $this->response->sendError(9);
+      return;
+    }
     parse_str(file_get_contents("php://input"), $_PUT);
     //because the data is provided via a PUT request we cannot acces the data in the body through the $_POST variable and we have to manually parse and store it
     $keys = ["projectTitle", "projectCode", "projectDescription", "projectInstruction", "responsibleTeacher"];
@@ -177,13 +189,6 @@ class Projects {
       $this->response->sendError(6);
       return false;
     }
-    //check if the user has sufficient permissions
-    //we cannot update every project so a wildcard is not permitted
-    if ($_SESSION["userLVL"] < 3 || $this->selector === "*") {
-      $this->response->sendError(9);
-      return false;
-    }
-
 
     $projectTitle = $_PUT["projectTitle"];
     $projectCode = $_PUT["projectCode"];

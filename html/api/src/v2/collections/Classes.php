@@ -61,6 +61,10 @@ class Classes {
   }
 
   private function list() {
+    if ($_SESSION['userLVL'] < 1) {
+      $this->response->sendError(9);
+      return;
+    }
     //check selector for validity, can be a wildcard, GUID or year with yearSelector
     if (!$this->request->checkSelector() && !($this->selector === "year" && !is_null($this->selector2))) {
       $this->response->sendError(6);
@@ -111,6 +115,10 @@ class Classes {
   }
 
   private function add() {
+    if ($_SESSION['userLVL'] < 3) {
+      $this->response->sendError(9);
+      return;
+    }
     $keys = ["name", "year"];
     if (!$this->request->POSTisset($keys)) {
       $this->response->sendError(8);
@@ -136,6 +144,10 @@ class Classes {
   }
 
   private function delete() {
+    if ($_SESSION['userLVL'] < 3) {
+      $this->response->sendError(9);
+      return;
+    }
     //check selector for validity
     if (!$this->request->checkSelector()) {
       $this->response->sendError(6);

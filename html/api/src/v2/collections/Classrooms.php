@@ -61,6 +61,10 @@ class Classrooms {
   }
 
   private function list() {
+    if ($_SESSION['userLVL'] < 1) {
+      $this->response->sendError(9);
+      return;
+    }
     //check selector for validity
     if (!$this->request->checkSelector()) {
       http_response_code(400);
@@ -100,6 +104,10 @@ class Classrooms {
   }
 
   private function add() {
+    if ($_SESSION['userLVL'] < 3) {
+      $this->response->sendError(9);
+      return;
+    }
     $keys = ["name"];
     if (!$this->request->POSTisset($keys)) {
       $this->response->sendError(8);
@@ -122,14 +130,13 @@ class Classrooms {
   }
 
   private function delete() {
+    if ($_SESSION['userLVL'] < 3) {
+      $this->response->sendError(9);
+      return;
+    }
     //check selector for validity
     if (!$this->request->checkSelector()) {
       $this->response->sendError(6);
-      return false;
-    }
-    //check if the user has sufficient permissions
-    if ($_SESSION["userLVL"] < 3) {
-      $this->response->sendError(9);
       return false;
     }
     if ($this->selector == "*") {
@@ -144,6 +151,10 @@ class Classrooms {
   }
 
   public function update() {
+    if ($_SESSION['userLVL'] < 3) {
+      $this->response->sendError(9);
+      return;
+    }
     parse_str(file_get_contents("php://input"), $_PUT);
     //because the data is provided via a PUT request we cannot acces the data in the body through the $_POST variable and we have to manually parse and store it
     $keys = ["name"];
@@ -156,14 +167,7 @@ class Classrooms {
       $this->response->sendError(6);
       return false;
     }
-    //check if the user has sufficient permissions
-    //we cannot update every classroom so a wildcard is not permitted
-    //check if the user has sufficient permissions
-    //we cannot update every classroom so a wildcard is not permitted
-    if ($_SESSION["userLVL"] < 3 || $this->selector === "*") {
-      $this->response->sendError(9);
-      return false;
-    }
+
     $name = $_PUT["name"];
     $userCreate = $_SESSION["GUID"];
     $GUID = $this->selector;

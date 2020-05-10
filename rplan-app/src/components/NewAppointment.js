@@ -228,11 +228,12 @@ export default class NewAppointment extends Component {
     let statStamp = `${this.props.appointmentDay}_${this.state.startTime}`;
     let endStamp = `${this.props.appointmentDay}_${this.state.endTime}`;
     API.get(`/availability/${statStamp}/${endStamp}`).then((response) => {
+      if (!response.data) return;
       let resp = response.data.response;
       let availability = {
         "classrooms": resp.classrooms.map((data) => {
           return {
-            text: data.classroom,
+            text: data.name,
             value: data.GUID,
             GUID: data.GUID
           }}),

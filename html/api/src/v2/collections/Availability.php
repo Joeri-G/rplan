@@ -65,6 +65,10 @@ class Availability {
   }
 
   private function list() {
+    if ($_SESSION['userLVL'] < 1) {
+      $this->response->sendError(9);
+      return;
+    }
     $resp = new \stdClass;
 
     $resp->teachers = $this->teachers();
@@ -131,7 +135,7 @@ class Availability {
     // modified from https://stackoverflow.com/questions/325933/determine-whether-two-date-ranges-overlap
     // Select matches from db.classrooms where the GUID does not occur in the classroom1 or classroom2 columns in the given timeframe
     $stmt = $this->conn->prepare(
-      "SELECT classroom, GUID
+      "SELECT name, GUID
       FROM classrooms WHERE GUID NOT IN (
       SELECT classroom1 FROM `appointments` WHERE
       		(TIMESTAMP(start) < TIMESTAMP(:end) OR
