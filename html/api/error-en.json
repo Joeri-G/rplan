@@ -118,5 +118,35 @@
     "id": 23,
     "http": 400,
     "msg": "Every appointment requires a project and either a teacher or a class"
+  },
+  {
+    "id": 24,
+    "http": 410,
+    "msg": "Resource is not available in the requested timeframe"
+  },
+  {
+    "id": 25,
+    "http": 410,
+    "msg": "Not enough laptops available"
+  },
+  {
+    "id": 26,
+    "http": 410,
+    "msg": "Teacher not available"
+  },
+  {
+    "id": 27,
+    "http": 410,
+    "msg": "Class not available"
+  },
+  {
+    "id": 28,
+    "http": 410,
+    "msg": "classroom not available"
+  },
+  {
+    "id": 29,
+    "http": 410,
+    "msg": "Project does not exist"
   }
 ]
