@@ -219,6 +219,7 @@ export default class NewAppointment extends Component {
       this.props.onSuccess();
       this.props.closeCallback();
     }).catch((error) => {
+      if (!error.response.data) {console.log(error);return};
       this.setState({message: error.response.data.error})
     });
   }
