@@ -79,3 +79,9 @@
   padding: 0.25em 0.5em;/* else it might collide with other styles */
   margin: 0.25em;
 }
+
+.appointmentModalContent .message {
+  background: #FF9021;
+  text-align: center;
+  padding: 0.5em;
+}
