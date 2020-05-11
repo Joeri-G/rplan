@@ -13,14 +13,11 @@ export default class ViewWeek extends Component {
     let savedMode = (typeof localStorage.mode === 'string' && localStorage.mode !== '') ? localStorage.mode : 'classes';
     let savedSelector = (typeof localStorage.selector === 'string' && localStorage.selector !== '') ? localStorage.selector : null;
 
-
     this.state = {
       currentdate: savedDate,
       startdate: getNextDayOfWeek(savedDate, 1),
       target: savedSelector,
-      mode: savedMode,
-      startHour: 7,
-      endHour: 17
+      mode: savedMode
     };
 
     this.setDate = this.setDate.bind(this);
@@ -55,6 +52,7 @@ export default class ViewWeek extends Component {
             selectorCallback={this.setSelector}
             defaultSelector={this.state.target}
             defaultDate={this.state.currentdate.toISOString().substring(0, 10)}
+            appConfig={this.props.appConfig}
           />
         {(this.state.target) ?
           <Calendar
@@ -62,6 +60,7 @@ export default class ViewWeek extends Component {
             startdate={this.state.startdate}
             currentdate={this.state.currentdate}
             target={this.state.target}
+            appConfig={this.props.appConfig}
           /> : null}
       </React.Fragment>
     );
@@ -161,13 +160,13 @@ class Datepicker extends Component {
 
   displaySelectOptions = () => {
     const modeDropdown = <Dropdown
-      ID="modeInput"
-      data={this.state.modes}
-      title={this.state.modeObj.text}
-      default={this.state.modeObj}
-      valuechange={this.updateMode}
-      nodefault={false}
-      notNULL={true}
+                            ID="modeInput"
+                            data={this.state.modes}
+                            title={this.state.modeObj.text}
+                            default={this.state.modeObj}
+                            valuechange={this.updateMode}
+                            nodefault={false}
+                            notNULL={true}
     />
 
     if (this.state.mode) {
@@ -177,19 +176,19 @@ class Datepicker extends Component {
       if (!data) data = [];
 
       const selectorDropdown = <Dropdown
-        ID="selectorInput"
-        data={data}
-        title={this.state.selectorObj.text}
-        default={this.state.modeObj}
-        valuechange={(e) => {
-          let val = e.target.dataset.value;
-          this.props.selectorCallback(this.state.mode, val);
-          // store the selector and mode in the localStorage
-          localStorage.mode = this.state.mode;
-          localStorage.selector = val;
-        }}
-        nodefault={false}
-        notNULL={true}
+                                  ID="selectorInput"
+                                  data={data}
+                                  title={this.state.selectorObj.text}
+                                  default={this.state.modeObj}
+                                  valuechange={(e) => {
+                                    let val = e.target.dataset.value;
+                                    this.props.selectorCallback(this.state.mode, val);
+                                    // store the selector and mode in the localStorage
+                                    localStorage.mode = this.state.mode;
+                                    localStorage.selector = val;
+                                  }}
+                                  nodefault={false}
+                                  notNULL={true}
       />
 
       return (
@@ -208,9 +207,7 @@ class Datepicker extends Component {
     let weekInc = w * 7;
     let d = new Date(this.state.dateValue);
     d.setDate(d.getDate() + weekInc);
-    console.log(d);
     let dateString = d.toISOString().substring(0, 10);
-    console.log(dateString);
     this.setState({dateValue: dateString});
     this.props.dateCallback(dateString);
   }
@@ -226,8 +223,8 @@ class Datepicker extends Component {
             <button onClick={()=>this.changeWeek(-1)}>&lt;</button>
             <input type="date" value={this.state.dateValue} onChange={(e) => {
               if (this.state.dateValue !== e.target.value) this.setState({dateValue: e.target.value});
-              this.props.dateCallback(e.target.value);}
-            } />
+              this.props.dateCallback(e.target.value);
+            }} />
             <button onClick={()=>this.changeWeek(+1)}>&gt;</button>
           </div>
         </div>
@@ -267,8 +264,10 @@ class Calendar extends Component {
   }
 
   calcPxOffset = (start, end) => {
-    let startHour = 7.5;
-    let endHour = 17.5;
+    // let startHour = this.props.appConfig.startHour;
+    // let endHour = this.props.appConfig.endHour;
+    let startHour = 7;
+    let endHour = 16;
     let dayheight = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--day-height').slice(0, -2), 10);
 
     start = MYSQLdatetimeToDate(start);
@@ -297,6 +296,7 @@ class Calendar extends Component {
       class: ap.class,
       classroom1: ap.classroom1,
       classroom2: ap.classroom2,
+      laptops: ap.laptops,
       project: ap.project,
       notes: ap.notes,
       duration: pxValues.duration,
@@ -326,7 +326,6 @@ class Calendar extends Component {
 
   render() {
     let appointments = [ [], [], [], [], [] ];
-    let start, ap;
     // loop through appointments
     for (const ap of this.state.appointments) {
       var dayArrOffset = 0; // allways start with an offset of 0
@@ -343,21 +342,30 @@ class Calendar extends Component {
         if (dayArrOffset > 6) break; // small sageguard to prevent infinite loops when the timestamp is invalid
       }
     };
+
+    const days = [];
+    for (var i = 0; i < 5; i++) {
+      days.push(<Day
+                  appointments={appointments[i]}
+                  day={formatDate(getNextDayOfWeek(this.props.startdate, i + 1))}
+                  dayClick={this.dayClick}
+                  refreshCallback={this.refresh}
+                  key={i}
+                />);
+    }
+
     return (
       <section className="viewWeek">
         <div className="days">
-          <Day appointments={appointments[0]} day={formatDate(getNextDayOfWeek(this.props.startdate, 1))} dayClick={this.dayClick} refreshCallback={this.refresh} />
-          <Day appointments={appointments[1]} day={formatDate(getNextDayOfWeek(this.props.startdate, 2))} dayClick={this.dayClick} refreshCallback={this.refresh} />
-          <Day appointments={appointments[2]} day={formatDate(getNextDayOfWeek(this.props.startdate, 3))} dayClick={this.dayClick} refreshCallback={this.refresh} />
-          <Day appointments={appointments[3]} day={formatDate(getNextDayOfWeek(this.props.startdate, 4))} dayClick={this.dayClick} refreshCallback={this.refresh} />
-          <Day appointments={appointments[4]} day={formatDate(getNextDayOfWeek(this.props.startdate, 5))} dayClick={this.dayClick} refreshCallback={this.refresh} />
+          {days}
         </div>
-        { this.state.appointmentWindow ? <NewAppointment closeCallback={() => {
-          this.setState({
-            appointmentWindow: !this.state.appointmentWindow,
-            appointmentDay: null
-          });
-        }} appointmentDay={this.state.appointmentDay} displayMode={this.props.mode} selectedTarget={this.props.target} refreshCallback={this.refresh} onSuccess={this.refresh} /> : null }
+        { this.state.appointmentWindow ? <NewAppointment
+                                            closeCallback={() => {this.setState({appointmentWindow: !this.state.appointmentWindow, appointmentDay: null});}}
+                                            appointmentDay={this.state.appointmentDay}
+                                            displayMode={this.props.mode}
+                                            selectedTarget={this.props.target}
+                                            refreshCallback={this.refresh}
+                                          /> : null }
       </section>
     );
   }
@@ -372,7 +380,11 @@ class Day extends Component {
         <p>{getDay(new Date(this.props.day))}</p>
         <div className="dayCover">
           {this.props.appointments.map((appointment) => {
-            return <Appointment key={appointment.GUID} data={appointment} refreshCallback={this.props.refreshCallback} />
+            return <Appointment
+                      key={appointment.GUID}
+                      data={appointment}
+                      refreshCallback={this.props.refreshCallback}
+                    />
           })}
         </div>
         <div className="day" onClick={() => {this.props.dayClick(this.props.day)}}></div>
@@ -385,12 +397,13 @@ class Appointment extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      anlargedAppointment: null,
+      enlargedAppointment: null,
       class: null,
       classroom1: null,
       classroom2: null,
       teacher1: null,
       teacher2: null,
+      laptops: null,
       project: null,
       notes: null
     };
@@ -403,8 +416,8 @@ class Appointment extends Component {
     if (this.props.data.classroom2)     this.loadResource('classroom2', 'classrooms');
     if (this.props.data.teacher1)       this.loadResource('teacher1', 'teachers');
     if (this.props.data.teacher2)       this.loadResource('teacher2', 'teachers');
-    if (this.props.data.project)        this.loadResource('project', 'projects');
     this.setState({
+      laptops: this.props.data.laptops,
       notes: this.props.data.notes
     });
 
@@ -431,11 +444,28 @@ class Appointment extends Component {
   }
 
   click = () => {
-    this.setState({anlargedAppointment: <ViewAppointment data={this.props.data} closeCallback={this.closeClick} refreshCallback={this.props.refreshCallback} />});
+    this.setState({enlargedAppointment: <ViewAppointment
+                                          data={{
+                                            startTimestamp: this.props.data.startTimestamp,
+                                            endTimestamp: this.props.data.endTimestamp,
+                                            class: this.state.class,
+                                            classroom1: this.state.classroom1,
+                                            classroom2: this.state.classroom2,
+                                            teacher1: this.state.teacher1,
+                                            teacher2: this.state.teacher2,
+                                            laptops: this.state.laptops,
+                                            project: this.state.project,
+                                            GUID: this.props.data.GUID,
+                                            notes: this.state.notes
+                                          }}
+                                          appointmentObject={this.props.data}
+                                          closeCallback={this.closeClick}
+                                          refreshCallback={this.props.refreshCallback}
+                                        />});
   }
 
   closeClick = () => {
-    this.setState({anlargedAppointment: null});
+    this.setState({enlargedAppointment: null});
   }
 
   render() {
@@ -459,7 +489,7 @@ class Appointment extends Component {
       <div className="appointment" style={this.style} onClick={this.click}>
         {(this.props.data.duration > 50) ? <p className="duration">{`${startHour}:${startMin} - ${endHour}:${endMin}`}</p> : null}
       </div>
-      {this.state.anlargedAppointment}
+      {this.state.enlargedAppointment}
     </React.Fragment>);
 
 
@@ -473,20 +503,22 @@ class Appointment extends Component {
               <p>{this.state.class}</p>
             </span>
             <span>
-              <p>Docent:</p>
-              <p>{this.state.teacher1}</p>
+              <p>Docenten:</p>
+              <p>
+                {this.state.teacher1}
+                {(this.state.teacher2 && this.state.teacher2) ? (", "+this.state.teacher2) : null}
+              </p>
             </span>
             <span>
-              <p>Extra Docent:</p>
-              <p>{this.state.teacher2}</p>
+              <p>Lokalen:</p>
+              <p>
+                {this.state.classroom1}
+                {(this.state.classroom1 && this.state.classroom2) ? (", "+this.state.classroom2) : null}
+              </p>
             </span>
             <span>
-              <p>Lokaal:</p>
-              <p>{this.state.classroom1}</p>
-            </span>
-            <span>
-              <p>Extra Lokaal:</p>
-              <p>{this.state.classroom2}</p>
+              <p>Laptops:</p>
+              <p>{this.state.laptops}</p>
             </span>
             <span>
               <p>Project:</p>
@@ -498,7 +530,7 @@ class Appointment extends Component {
             </span>
           </div>
         </div>
-        {this.state.anlargedAppointment}
+        {this.state.enlargedAppointment}
       </React.Fragment>
     );
   }
