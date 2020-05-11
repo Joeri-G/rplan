@@ -8,13 +8,19 @@ import './css/ViewAppointment.css';
 export default class ViewAppointment extends Component {
   constructor(props) {
     super(props);
+
+    let s = this.props.appointmentObject.startTimestamp;
+    let e = this.props.appointmentObject.endTimestamp
+
+    let formattedStatetime = `${s.slice(0, 10)}_${s.slice(11, 16)}`;
+    let formattedEndtime = `${e.slice(0, 10)}_${e.slice(11, 16)}`;
     this.state = {
       // load the data of the appointment into the state
       openModal: true,
       edit: false,
       message: null,
-      startTime: this.props.appointmentObject.startTimestamp,
-      endTime: this.props.appointmentObject.endTimestamp,
+      startTime: formattedStatetime,
+      endTime: formattedEndtime,
       GUID: this.props.appointmentObject.GUID,
       class: this.props.appointmentObject.class,
       classroom1: this.props.appointmentObject.classroom1,
