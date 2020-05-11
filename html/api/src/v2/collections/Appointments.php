@@ -38,17 +38,17 @@ class Appointments {
         $this->list();
         break;
 
-      case 'POST':  //add an appointment (admin)
+      case 'POST':  //add an appointment
         $this->add();
         break;
 
-      case 'DELETE':  //delete one or all appointments (admin)
+      case 'DELETE':  //delete one or all appointments
         $this->delete();
         break;
       //
-      // case 'PUT': //update an appointment (admin)
-      //   $this->update();
-      //   break;
+      case 'PUT': //update an appointment
+        $this->update();
+        break;
 
       default:
         $this->response->sendError(11);
@@ -63,7 +63,7 @@ class Appointments {
   }
 
   private function list() {
-    // Only list usernames in a specific timeframe to prevent having to return 2000 rows
+    // Only list appointments in a specific timeframe to prevent having to return 2000 rows
     if (!$this->validateDate($this->selector) && !$this->request->isValidGUID($this->selector)) {
       $this->response->sendError(17);
       return false;
@@ -96,7 +96,7 @@ class Appointments {
     // check if a filter has been given else, look in every field
     if (!isset($_GET['f']) || !in_array($_GET['f'], ['class', 'classroom', 'project', 'teacher', 'GUID'])) {
       $stmt = $this->conn->prepare(
-        "SELECT start, endstamp, teacher1, teacher2, class, classroom1, classroom2, project, notes, GUID
+        "SELECT start, endstamp, teacher1, teacher2, class, classroom1, classroom2, project, laptops, notes, GUID
         FROM appointments
         WHERE DATE(start) >= :start AND DATE(start) <= :end AND (
           teacher1 = :g OR teacher1 = :g OR teacher2 = :g OR class = :g OR classroom1 = :g OR classroom2 = :g OR project = :g OR GUID = :g
@@ -124,7 +124,7 @@ class Appointments {
           break;
       }
       $stmt = $this->conn->prepare( // this is safe-ish since we checked $filter against a list of known-safe values
-        "SELECT start, endstamp, teacher1, teacher2, class, classroom1, classroom2, project, notes, GUID
+        "SELECT start, endstamp, teacher1, teacher2, class, classroom1, classroom2, project, laptops, notes, GUID
         FROM appointments
         WHERE DATE(start) >= :start AND DATE(start) <= :end AND ($filter)
         ORDER BY start"
@@ -153,7 +153,7 @@ class Appointments {
       }
 
       $stmt = $this->conn->prepare(
-        "SELECT start, endstamp, teacher1, teacher2, class, classroom1, classroom2, project, notes, GUID
+        "SELECT start, endstamp, teacher1, teacher2, class, classroom1, classroom2, project, laptops, notes, GUID
         FROM appointments
         WHERE DATE(start) >= :start AND DATE(start) <= :end
         ORDER BY start"
@@ -165,7 +165,7 @@ class Appointments {
     }
     else {
       $stmt = $this->conn->prepare(
-        "SELECT start, endstamp, teacher1, teacher2, class, classroom1, classroom2, project, notes, GUID
+        "SELECT start, endstamp, teacher1, teacher2, class, classroom1, classroom2, project, laptops, notes, GUID
         FROM appointments
         WHERE DATE(start) = :start
         ORDER BY start"
@@ -181,7 +181,7 @@ class Appointments {
 
   private function listGUID(string $GUID) {
     $stmt = $this->conn->prepare(
-      "SELECT start, endstamp, teacher1, teacher2, class, classroom1, classroom2, project, notes
+      "SELECT start, endstamp, teacher1, teacher2, class, classroom1, classroom2, project, laptops, notes
       FROM appointments
       WHERE GUID = :GUID"
     );
@@ -197,6 +197,10 @@ class Appointments {
   }
 
   private function add() {
+    if ($_SESSION['userLVL'] < 2) {
+      $this->response->sendError(9);
+      return;
+    }
     // yay, lots of input checks
     // make sure the values are set
     if (!$this->checkPost([
@@ -242,7 +246,7 @@ class Appointments {
     $e = \DateTime::createFromFormat('Y-m-d_H:i', $end);
     // make sure the first date is smaller than the second
 
-    if ($e->getTimestamp() <= $s->getTimestamp()) {
+    if (!$s|| !$e || $e->getTimestamp() <= $s->getTimestamp()) {
       $this->response->sendError(21);
       return;
     }
@@ -260,10 +264,30 @@ class Appointments {
     }
 
     // make sure the resources are available
-    if (!$this->checkClassAvailability()) {
+    if ($class && !$this->checkClassAvailability($start, $end, $class)) {
+      $this->response->sendError(); // have to write a specific error
       return;
     }
 
+    if (($classroom1 || $classroom2) && !$this->checkClassroomAvailability($start, $end, $classroom1, $classroom2)) {
+      $this->response->sendError(); // have to write a specific error
+      return;
+    }
+
+    if (($teacher1 || $teacher2) && !$this->checkTeacherAvailability($start, $end, $teacher1, $teacher2)) {
+      $this->response->sendError(); // have to write a specific error
+      return;
+    }
+
+    if ($project && !$this->checkProject($start, $end, $project)) {
+      $this->response->sendError(); // have to write a specific error
+      return;;
+    }
+
+    if ($laptops && !$this->checkLaptopAvailability($start, $end, (int) $laptops, (int) $settings['totalLaptops']['value'])) {
+      $this->response->sendError(); // have to write a specific error
+      return;
+    }
 
     $stmt = $this->conn->prepare(
       "INSERT INTO appointments (
@@ -301,7 +325,7 @@ class Appointments {
       'start' => $start,
       'endstamp' => $end,
       'teacher1' => $teacher1,
-      'teacher2' => $teacher1,
+      'teacher2' => $teacher2,
       'class' => $class,
       'classroom1' => $classroom1,
       'classroom2' => $classroom2,
@@ -317,7 +341,7 @@ class Appointments {
       'start' => $start,
       'endstamp' => $end,
       'teacher1' => $teacher1,
-      'teacher2' => $teacher1,
+      'teacher2' => $teacher2,
       'class' => $class,
       'classroom1' => $classroom1,
       'classroom2' => $classroom2,
@@ -332,7 +356,144 @@ class Appointments {
   }
 
   private function update() {
+    if ($_SESSION['userLVL'] < 2) {
+      $this->response->sendError(9);
+      return;
+    }
 
+    if (!$this->request->isValidGUID($this->selector)) {
+      $this->response->sendError(17);
+      return;
+    }
+
+    $GUID = $this->selector;
+
+    parse_str(file_get_contents("php://input"), $_PUT);
+    if (!$this->checkPUT([
+      'class',
+      'classroom1',
+      'classroom2',
+      'teacher1',
+      'teacher2',
+      'project',
+      'laptops',
+      'note',
+      'start',
+      'end'
+    ])) {
+      $this->response->sendError(8);
+      return;
+    }
+
+    // if the given value is not a valid GUID make it null
+    $class = ($this->request->isValidGUID($_PUT['class'])) ? $_PUT['class'] : null;
+    $classroom1 = ($this->request->isValidGUID($_PUT['classroom1'])) ? $_PUT['classroom1'] : null;
+    $classroom2 = ($this->request->isValidGUID($_PUT['classroom2'])) ? $_PUT['classroom2'] : null;
+    $teacher1 = ($this->request->isValidGUID($_PUT['teacher1'])) ? $_PUT['teacher1'] : null;
+    $teacher2 = ($this->request->isValidGUID($_PUT['teacher2'])) ? $_PUT['teacher2'] : null;
+    $project = ($this->request->isValidGUID($_PUT['project'])) ? $_PUT['project'] : null;
+    $laptops = ((int) $_PUT['laptops'] > 0) ? $_PUT['laptops'] : 0;
+    $note = ($_PUT['note'] !== 'null') ? $_PUT['note'] : "";
+
+    $start = $_PUT['start'];
+    $end = $_PUT['end'];
+
+    // make sure the appointment contains a project and a teacher or class
+    if (!$project || !($class || $teacher1 || $teacher2)) {
+      $this->response->sendError(23);
+      return;
+    }
+
+    // do input checks
+
+    $s = \DateTime::createFromFormat('Y-m-d_H:i', $start);
+    $e = \DateTime::createFromFormat('Y-m-d_H:i', $end);
+    // make sure the first date is smaller than the second
+
+    if (!$s|| !$e || $e->getTimestamp() <= $s->getTimestamp()) {
+      $this->response->sendError(21);
+      return;
+    }
+
+    // load settings
+    $settings = $this->db->loadSettings();
+
+    // check for startHour and endHour
+    $starthour = (isset($settings['startHour'])) ? (int) $settings['startHour']['value'] : 0;
+    $endhour = (isset($settings['endHour'])) ? (int) $settings['endHour']['value'] : 0;
+
+    if ((int)$s->format('G') < $starthour || (int)$e->format('G') >= $endhour) {
+      $this->response->sendError(22);
+      return;
+    }
+
+    // make sure the resources are available
+    if ($class && !$this->checkClassAvailability($start, $end, $class, $GUID)) {
+      $this->response->sendError(); // have to write a specific error
+      return;
+    }
+
+    if (($classroom1 || $classroom2) && !$this->checkClassroomAvailability($start, $end, $classroom1, $classroom2, $GUID)) {
+      $this->response->sendError(); // have to write a specific error
+      return;
+    }
+
+    if (($teacher1 || $teacher2) && !$this->checkTeacherAvailability($start, $end, $teacher1, $teacher2, $GUID)) {
+      $this->response->sendError(); // have to write a specific error
+      return;
+    }
+
+    if ($project && !$this->checkProject($start, $end, $project, $GUID)) {
+      $this->response->sendError(); // have to write a specific error
+      return;;
+    }
+
+    if ($laptops && !$this->checkLaptopAvailability($start, $end, (int) $laptops, (int) $settings['totalLaptops']['value'], $GUID)) {
+      $this->response->sendError(); // have to write a specific error
+      return;
+    }
+
+    $stmt = $this->conn->prepare(
+      'UPDATE appointments
+      SET start = :start, endstamp = :endstamp, teacher1 = :teacher1, teacher2 = :teacher2,
+          class = :class, classroom1 = :classroom1, classroom2 = :classroom2, laptops = :laptops,
+          project = :project, notes = :notes, USER = :USER, lastChanged = current_timestamp, IP = :IP
+      WHERE GUID = :GUID'
+    );
+
+    $stmt->execute([
+      'start' => $start,
+      'endstamp' => $end,
+      'teacher1' => $teacher1,
+      'teacher2' => $teacher2,
+      'class' => $class,
+      'classroom1' => $classroom1,
+      'classroom2' => $classroom2,
+      'laptops' => $laptops,
+      'project' => $project,
+      'notes' => $note,
+      'USER' => $_SESSION['GUID'],
+      'IP' => $_SERVER['REMOTE_ADDR'],
+      'GUID' => $GUID
+    ]);
+
+
+    $data = [
+      'start' => $start,
+      'endstamp' => $end,
+      'teacher1' => $teacher1,
+      'teacher2' => $teacher2,
+      'class' => $class,
+      'classroom1' => $classroom1,
+      'classroom2' => $classroom2,
+      'laptops' => $laptops,
+      'project' => $project,
+      'notes' => $note,
+      'GUID' => $GUID
+    ];
+
+    $this->response->sendSuccess($data);
+    return true;
   }
 
   private function delete() {
@@ -360,7 +521,138 @@ class Appointments {
     return true;
   }
 
-  private function checkClassAvailability() {
+  private function checkPUT($keys = []) {
+    parse_str(file_get_contents("php://input"), $_PUT);
+    foreach ($keys as $key) {
+      if (!isset($_PUT[$key]))
+        return false;
+    }
     return true;
+  }
+
+  private function checkClassAvailability($start, $end, $class, $currentAppointment = "Empty") {
+    // select class that matches GUID and is not in timeframe
+    $stmt = $this->conn->prepare(
+      'SELECT 1 FROM classes WHERE
+      GUID = :GUID AND
+      GUID IN (
+        SELECT class FROM appointments WHERE
+        DATE(start) >= DATE(:start) AND DATE(start) <= DATE(:end) AND
+        class = :GUID AND
+        GUID != :curr
+      )'
+    );
+
+    $stmt->execute([
+      'GUID' => $class,
+      'start' => $start,
+      'end' => $end,
+      'curr' => $currentAppointment
+    ]);
+    if ($stmt->rowCount() > 0) { // if the rowcount is > 0 we found a match in this timeframe
+      return false;
+    }
+    return true;
+  }
+
+  private function checkClassroomAvailability($start, $end, $classroom1, $classroom2, $currentAppointment = "Empty") {
+    $stmt = $this->conn->prepare(
+      'SELECT 1 FROM classrooms WHERE
+      (GUID = :c1 OR GUID = :c2) AND
+      (GUID IN (
+        SELECT classroom1 FROM appointments WHERE
+        DATE(start) >= DATE(:start) AND DATE(start) <= DATE(:end) AND
+        classroom1 = :c1 AND
+        GUID != :curr
+      ) OR GUID IN (
+        SELECT classroom2 FROM appointments WHERE
+        DATE(start) >= DATE(:start) AND DATE(start) <= DATE(:end) AND
+        classroom2 = :c2 AND
+        GUID != :curr
+      ))'
+    );
+
+    $stmt->execute([
+      'c1' => $classroom1,
+      'c2' => $classroom2,
+      'start' => $start,
+      'end' => $end,
+      'curr' => $currentAppointment
+    ]);
+
+    if ($stmt->rowCount() > 0)// if the rowcount is > 0 we found a match in this timeframe
+      return false;
+    return true;
+  }
+
+  private function checkTeacherAvailability($start, $end, $teacher1, $teacher2, $currentAppointment = "Empty") {
+    // for this one we not only have to make sure the teacher is not occupied, but also that he is available that day
+
+    $stmt = $this->conn->prepare(
+      'SELECT teacherAvailability FROM teachers WHERE
+      (GUID = :t1 OR GUID = :t2) AND
+      (GUID NOT IN (
+        SELECT teacher1 FROM appointments WHERE
+        DATE(start) >= DATE(:start) AND DATE(start) <= DATE(:end) AND
+        teacher1 = :t1 AND
+        GUID != :curr
+      ) AND GUID NOT IN (
+        SELECT teacher2 FROM appointments WHERE
+        DATE(start) >= DATE(:start) AND DATE(start) <= DATE(:end) AND
+        teacher2 = :t2 AND
+        GUID != :curr
+      ))'
+    );
+
+    $stmt->execute([
+      't1' => $teacher1,
+      't2' => $teacher2,
+      'start' => $start,
+      'end' => $end,
+      'curr' => $currentAppointment
+    ]);
+    if ($stmt->rowCount() === 0)// if the rowcount is 0 we found a match in this timeframe
+      return false;
+
+    $teachers = $stmt->fetchAll(\PDO::FETCH_ASSOC); // decode to a boolean array
+    // get day of week
+    $dow = ((int)\DateTime::createFromFormat('Y-m-d_H:i', $start)->format("N")) - 1; // https://www.php.net/manual/en/function.date.php for reference
+    foreach ($teachers as $teacher) {
+      $availability = json_decode(strtolower($teacher['teacherAvailability']));
+      if (!isset($availability[$dow]) || !$availability[$dow])
+        return false;
+    }
+    return true;
+  }
+
+  private function checkProject($start, $end, $project, $currentAppointment = "Empty") {
+    $stmt = $this->conn->prepare('SELECT 1 FROM projects WHERE GUID = :GUID');
+    $stmt->execute(['GUID' => $project]);
+    if ($stmt->rowCount() === 0) {
+      return false;
+    }
+    return true;
+  }
+
+  private function checkLaptopAvailability($start, $end, $laptops, $totalLaptops, $currentAppointment = "Empty") {
+    // list every appointment in the timeframe
+    $stmt = $this->conn->prepare(
+      'SELECT laptops FROM appointments WHERE
+        DATE(start) >= DATE(:start) AND
+        DATE(start) <= DATE(:end) AND
+        GUID != :curr'
+    );
+    $stmt->execute([
+      'start' => $start,
+      'end' => $end,
+      'curr' => $currentAppointment
+    ]);
+    $takenLaptops = $laptops;
+    $data = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    foreach ($data as $d) {
+      if (!$d['laptops']) continue;
+      $takenLaptops += (int) $d['laptops'];
+    }
+    return ($takenLaptops <= $totalLaptops);
   }
 }
