@@ -216,10 +216,10 @@ export default class NewAppointment extends Component {
     let post = `class=${c}&classroom1=${c1}&classroom2=${c2}&teacher1=${t1}&teacher2=${t2}&project=${p}&laptops=${l}&note=${n}&start=${s}&end=${e}`;
 
     API.post(`/appointments/`, post).then((resp) => {
-      this.props.onSuccess();
+      this.props.refreshCallback();
       this.props.closeCallback();
     }).catch((error) => {
-      if (!error.response.data) {console.log(error);return};
+      if (!error.response) {console.log(error);return};
       this.setState({message: error.response.data.error})
     });
   }
