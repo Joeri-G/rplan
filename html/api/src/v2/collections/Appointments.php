@@ -240,13 +240,18 @@ class Appointments {
       return;
     }
 
+    // replace _ in input
+    $start = str_replace('_', ' ', $start);
+    $end = str_replace('_', ' ', $end);
+
     // do input checks
 
-    $s = \DateTime::createFromFormat('Y-m-d_H:i', $start);
-    $e = \DateTime::createFromFormat('Y-m-d_H:i', $end);
+    $s = \DateTime::createFromFormat('Y-m-d H:i', $start);
+    $e = \DateTime::createFromFormat('Y-m-d H:i', $end);
     // make sure the first date is smaller than the second
-
     if (!$s|| !$e || $e->getTimestamp() <= $s->getTimestamp()) {
+
+
       $this->response->sendError(21);
       return;
     }
@@ -265,27 +270,27 @@ class Appointments {
 
     // make sure the resources are available
     if ($class && !$this->checkClassAvailability($start, $end, $class)) {
-      $this->response->sendError(); // have to write a specific error
+      $this->response->sendError(27); // have to write a specific error
       return;
     }
 
     if (($classroom1 || $classroom2) && !$this->checkClassroomAvailability($start, $end, $classroom1, $classroom2)) {
-      $this->response->sendError(); // have to write a specific error
+      $this->response->sendError(28); // have to write a specific error
       return;
     }
 
     if (($teacher1 || $teacher2) && !$this->checkTeacherAvailability($start, $end, $teacher1, $teacher2)) {
-      $this->response->sendError(); // have to write a specific error
+      $this->response->sendError(26); // have to write a specific error
       return;
     }
 
     if ($project && !$this->checkProject($start, $end, $project)) {
-      $this->response->sendError(); // have to write a specific error
+      $this->response->sendError(29); // have to write a specific error
       return;;
     }
 
     if ($laptops && !$this->checkLaptopAvailability($start, $end, (int) $laptops, (int) $settings['totalLaptops']['value'])) {
-      $this->response->sendError(); // have to write a specific error
+      $this->response->sendError(25); // have to write a specific error
       return;
     }
 
@@ -398,6 +403,10 @@ class Appointments {
     $start = $_PUT['start'];
     $end = $_PUT['end'];
 
+    // replace _ in input
+    $start = str_replace('_', ' ', $start);
+    $end = str_replace('_', ' ', $end);
+
     // make sure the appointment contains a project and a teacher or class
     if (!$project || !($class || $teacher1 || $teacher2)) {
       $this->response->sendError(23);
@@ -406,8 +415,8 @@ class Appointments {
 
     // do input checks
 
-    $s = \DateTime::createFromFormat('Y-m-d_H:i', $start);
-    $e = \DateTime::createFromFormat('Y-m-d_H:i', $end);
+    $s = \DateTime::createFromFormat('Y-m-d H:i', $start);
+    $e = \DateTime::createFromFormat('Y-m-d H:i', $end);
     // make sure the first date is smaller than the second
 
     if (!$s|| !$e || $e->getTimestamp() <= $s->getTimestamp()) {
@@ -429,27 +438,27 @@ class Appointments {
 
     // make sure the resources are available
     if ($class && !$this->checkClassAvailability($start, $end, $class, $GUID)) {
-      $this->response->sendError(); // have to write a specific error
+      $this->response->sendError(27); // have to write a specific error
       return;
     }
 
     if (($classroom1 || $classroom2) && !$this->checkClassroomAvailability($start, $end, $classroom1, $classroom2, $GUID)) {
-      $this->response->sendError(); // have to write a specific error
+      $this->response->sendError(28); // have to write a specific error
       return;
     }
 
     if (($teacher1 || $teacher2) && !$this->checkTeacherAvailability($start, $end, $teacher1, $teacher2, $GUID)) {
-      $this->response->sendError(); // have to write a specific error
+      $this->response->sendError(26); // have to write a specific error
       return;
     }
 
     if ($project && !$this->checkProject($start, $end, $project, $GUID)) {
-      $this->response->sendError(); // have to write a specific error
+      $this->response->sendError(29); // have to write a specific error
       return;;
     }
 
     if ($laptops && !$this->checkLaptopAvailability($start, $end, (int) $laptops, (int) $settings['totalLaptops']['value'], $GUID)) {
-      $this->response->sendError(); // have to write a specific error
+      $this->response->sendError(25); // have to write a specific error
       return;
     }
 
@@ -530,18 +539,33 @@ class Appointments {
     return true;
   }
 
-  private function checkClassAvailability($start, $end, $class, $currentAppointment = "Empty") {
+  private function checkClassAvailability($start, $end, $class, $currentAppointment = null) {
     // select class that matches GUID and is not in timeframe
     $stmt = $this->conn->prepare(
       'SELECT 1 FROM classes WHERE
       GUID = :GUID AND
       GUID IN (
         SELECT class FROM appointments WHERE
-        DATE(start) >= DATE(:start) AND DATE(start) <= DATE(:end) AND
-        class = :GUID AND
-        GUID != :curr
+        TIMESTAMP(start) >= TIMESTAMP(:start) AND
+        TIMESTAMP(start) <= TIMESTAMP(:end) AND
+        class = :GUID
       )'
     );
+
+    if ($currentAppointment) {
+      $stmt = null;
+      $stmt = $this->conn->prepare(
+        'SELECT 1 FROM classes WHERE
+        GUID = :GUID AND
+        GUID IN (
+          SELECT class FROM appointments WHERE
+          TIMESTAMP(start) >= TIMESTAMP(:start) AND
+          TIMESTAMP(start) <= TIMESTAMP(:end) AND
+          class = :GUID AND
+          GUID != :curr
+        )'
+      );
+    }
 
     $stmt->execute([
       'GUID' => $class,
@@ -555,22 +579,43 @@ class Appointments {
     return true;
   }
 
-  private function checkClassroomAvailability($start, $end, $classroom1, $classroom2, $currentAppointment = "Empty") {
+  private function checkClassroomAvailability($start, $end, $classroom1, $classroom2, $currentAppointment = null) {
     $stmt = $this->conn->prepare(
       'SELECT 1 FROM classrooms WHERE
       (GUID = :c1 OR GUID = :c2) AND
       (GUID IN (
         SELECT classroom1 FROM appointments WHERE
-        DATE(start) >= DATE(:start) AND DATE(start) <= DATE(:end) AND
-        classroom1 = :c1 AND
-        GUID != :curr
+        TIMESTAMP(start) >= TIMESTAMP(:start) AND
+        TIMESTAMP(start) <= TIMESTAMP(:end) AND
+        classroom1 = :c1
       ) OR GUID IN (
         SELECT classroom2 FROM appointments WHERE
-        DATE(start) >= DATE(:start) AND DATE(start) <= DATE(:end) AND
-        classroom2 = :c2 AND
-        GUID != :curr
+        TIMESTAMP(start) >= TIMESTAMP(:start) AND
+        TIMESTAMP(start) <= TIMESTAMP(:end) AND
+        classroom2 = :c2
       ))'
     );
+
+    if ($currentAppointment) {
+      $stmt = null;
+      $stmt = $this->conn->prepare(
+        'SELECT 1 FROM classrooms WHERE
+        (GUID = :c1 OR GUID = :c2) AND
+        (GUID IN (
+          SELECT classroom1 FROM appointments WHERE
+          TIMESTAMP(start) >= TIMESTAMP(:start) AND
+          TIMESTAMP(start) <= TIMESTAMP(:end) AND
+          classroom1 = :c1 AND
+          GUID != :curr
+        ) OR GUID IN (
+          SELECT classroom2 FROM appointments WHERE
+          TIMESTAMP(start) >= TIMESTAMP(:start) AND
+          TIMESTAMP(start) <= TIMESTAMP(:end) AND
+          classroom2 = :c2 AND
+          GUID != :curr
+        ))'
+      );
+    }
 
     $stmt->execute([
       'c1' => $classroom1,
@@ -593,30 +638,52 @@ class Appointments {
       (GUID = :t1 OR GUID = :t2) AND
       (GUID NOT IN (
         SELECT teacher1 FROM appointments WHERE
-        DATE(start) >= DATE(:start) AND DATE(start) <= DATE(:end) AND
-        teacher1 = :t1 AND
-        GUID != :curr
-      ) AND GUID NOT IN (
+        TIMESTAMP(start) >= TIMESTAMP(:start) AND
+        TIMESTAMP(start) <= TIMESTAMP(:end) AND
+        teacher1 = :t1
+      ) OR GUID NOT IN (
         SELECT teacher2 FROM appointments WHERE
-        DATE(start) >= DATE(:start) AND DATE(start) <= DATE(:end) AND
-        teacher2 = :t2 AND
-        GUID != :curr
+        TIMESTAMP(start) >= TIMESTAMP(:start) AND
+        TIMESTAMP(start) <= TIMESTAMP(:end) AND
+        teacher2 = :t2
       ))'
     );
+
+    if ($currentAppointment) {
+      $stmt = null;
+      $stmt = $this->conn->prepare(
+        'SELECT teacherAvailability FROM teachers WHERE
+        (GUID = :t1 OR GUID = :t2) AND
+        (GUID NOT IN (
+          SELECT teacher1 FROM appointments WHERE
+          TIMESTAMP(start) >= TIMESTAMP(:start) AND
+          TIMESTAMP(start) <= TIMESTAMP(:end) AND
+          teacher1 = :t1 AND
+          GUID != :curr
+        ) OR GUID NOT IN (
+          SELECT teacher2 FROM appointments WHERE
+          TIMESTAMP(start) >= TIMESTAMP(:start) AND
+          TIMESTAMP(start) <= TIMESTAMP(:end) AND
+          teacher2 = :t2 AND
+          GUID != :curr
+        ))'
+      );
+    }
 
     $stmt->execute([
       't1' => $teacher1,
       't2' => $teacher2,
       'start' => $start,
       'end' => $end,
-      'curr' => $currentAppointment
+      'curr' =>  $currentAppointment
     ]);
-    if ($stmt->rowCount() === 0)// if the rowcount is 0 we found a match in this timeframe
+    if ($stmt->rowCount() === 0) // if the rowcount is 0 we found a match in this timeframe
       return false;
-
     $teachers = $stmt->fetchAll(\PDO::FETCH_ASSOC); // decode to a boolean array
     // get day of week
-    $dow = ((int)\DateTime::createFromFormat('Y-m-d_H:i', $start)->format("N")) - 1; // https://www.php.net/manual/en/function.date.php for reference
+    $dobj = \DateTime::createFromFormat('Y-m-d H:i', $start);
+    if (!$dobj) return false;
+    $dow = ((int)$dobj->format("N")) - 1; // https://www.php.net/manual/en/function.date.php for reference
     foreach ($teachers as $teacher) {
       $availability = json_decode(strtolower($teacher['teacherAvailability']));
       if (!isset($availability[$dow]) || !$availability[$dow])
@@ -647,7 +714,7 @@ class Appointments {
       'end' => $end,
       'curr' => $currentAppointment
     ]);
-    $takenLaptops = $laptops;
+    $takenLaptops = ($laptops < 0) ? 0 : $laptops; // make sure its not a negative int
     $data = $stmt->fetchAll(\PDO::FETCH_ASSOC);
     foreach ($data as $d) {
       if (!$d['laptops']) continue;
