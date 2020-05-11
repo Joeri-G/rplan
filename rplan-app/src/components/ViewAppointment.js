@@ -1,5 +1,6 @@
 import React, {Component} from 'react';
 import API from '../axios-config';
+import Dropdown from './Dropdown';
 // import Dropdown from './Dropdown';
 import './css/ViewAppointment.css';
 
@@ -8,62 +9,281 @@ export default class ViewAppointment extends Component {
   constructor(props) {
     super(props);
     this.state = {
+      // load the data of the appointment into the state
       openModal: true,
       edit: false,
-      class: null,
-      classroom1: null,
-      classroom2: null,
-      teacher1: null,
-      teacher2: null,
-      project: null,
-      notes: null
+      message: null,
+      startTime: this.props.appointmentObject.startTimestamp,
+      endTime: this.props.appointmentObject.endTimestamp,
+      GUID: this.props.appointmentObject.GUID,
+      class: this.props.appointmentObject.class,
+      classroom1: this.props.appointmentObject.classroom1,
+      classroom2: this.props.appointmentObject.classroom2,
+      teacher1: this.props.appointmentObject.teacher1,
+      teacher2: this.props.appointmentObject.teacher2,
+      project: this.props.appointmentObject.project,
+      laptops: this.props.appointmentObject.laptops,
+      note: this.props.appointmentObject.notes,
+      availability: {
+        "classrooms": [],
+        "teachers": [],
+        "classes": []
+      },
+      projects: []
     }
-  }
-
-  async componentDidMount() {
-    // now we're going to load all the data of the resources
-    if (this.props.data.class)          this.loadResource('class', 'classes');
-    if (this.props.data.classroom1)     this.loadResource('classroom1', 'classrooms');
-    if (this.props.data.classroom2)     this.loadResource('classroom2', 'classrooms');
-    if (this.props.data.teacher1)       this.loadResource('teacher1', 'teachers');
-    if (this.props.data.teacher2)       this.loadResource('teacher2', 'teachers');
-    if (this.props.data.project)        this.loadResource('project', 'projects');
-    this.setState({
-      notes: this.props.data.notes
-    });
-
-    if (!this.props.data.project) return;
-    API.get(`/projects/${this.props.data.project}`).then((response) => {
-      if (!response.data.successful) return;
-      this.setState({
-        project: response.data.response.projectTitle
-      });
-    }).catch((error) => {console.log(error)});
-
-  }
-
-  loadResource = (id, coll) => {
-    API.get(`/${coll}/${this.props.data[id]}`).then((response) => {
-      if (!response.data.successful) return;
-      let obj = {};
-      obj[id] = response.data.response.name
-      this.setState(obj);
-    }).catch((error) => {console.log(error)});
+    this.updateSelected = this.updateSelected.bind(this);
   }
 
   edit = () => {
-    alert('Working on it');
+    this.setState({
+      edit: true
+    });
   }
 
   delete = () => {
-    if (!window.confirm("Weet u zeker dat u deze afspraak wilt verwijderen? (Dit is kan niet ongedaan worden gemaakt)")) return;
+    if (!window.confirm("Weet u zeker dat u deze afspraak wilt verwijderen?")) return;
     API.delete(`/appointments/${this.props.data.GUID}`).then((response)=>{
       this.props.refreshCallback();
       this.props.closeCallback();
-    }).catch(error=>console.log);
+    }).catch((error)=>console.log(error));
+  }
+
+  requestAvailableResources = () => {
+    let start = this.props.data.startTimestamp;
+    let end = this.props.data.endTimestamp;
+
+    let statStamp = `${start.slice(0,10)}_${start.slice(11,16)}`;
+    let endStamp = `${end.slice(0,10)}_${end.slice(11,16)}`;
+    API.get(`/availability/${statStamp}/${endStamp}`).then((response) => {
+      if (!response.data) return;
+      let resp = response.data.response;
+      // now we need to sanatize the data and put it into objects the <Dropwdown /> can use
+      let availability = {
+        "classrooms": resp.classrooms.map((data) => {
+          return {
+            text: data.name,
+            value: data.GUID,
+            GUID: data.GUID
+          }}),
+        "teachers": resp.teachers.map((data) => {
+          return {
+            text: data.name,
+            value: data.GUID,
+            GUID: data.GUID
+          }}),
+        "classes": resp.classes.map((data) => {
+          return {
+            text: data.name,
+            value: data.GUID,
+            GUID: data.GUID
+          }})
+      };
+      this.setState({
+        availability: availability
+      });
+    }).catch((error) => {
+      console.log(error);
+      (error.response) ? this.setState({message: error.response.data.message}) : console.error(error);
+    });
+
+    API.get('/projects').then((response) => {
+      this.setState({
+        projects: response.data.response.map((data) => {
+          return {
+            text: data.projectTitle,
+            value: data.GUID,
+            GUID: data.GUID
+          }})
+      });
+    }).catch((error) => {
+      (error.response) ? this.setState({message: error.response.data.message}) : console.error(error);
+    });
+
+    this.setState({
+      loadedAvailability: true
+    });
+  }
+
+  updateSelected = (e) => {
+    let kvlist = { // list of key value pairs that map ids to values
+      classInputEdit: 'class',
+      teacher1InputEdit: 'teacher1',
+      teacher2InputEdit: 'teacher2',
+      classroom1InputEdit: 'classroom1',
+      classroom2InputEdit: 'classroom2',
+      projectInputEdit: 'project'
+    };
+    let value = e.target.dataset.value;
+    let id = e.target.parentElement.parentElement.getElementsByTagName('input')[0].id;
+    if (!kvlist[id]) return
+    let obj = {};
+    obj[kvlist[id]] = value;
+    this.setState(obj);
+  }
+
+  updateInp = (e) => {
+    let kvlist = {
+      laptopInputEdit: 'laptops',
+      notesInputEdit: 'note'
+    };
+    let value = e.target.value;
+    let id = e.target.id;
+    if (!kvlist[id]) return
+    let obj = {};
+    obj[kvlist[id]] = value;
+    this.setState(obj);
+  }
+
+  modalEdit = () => {
+    return (
+      <div className="editOptions">
+        <div className="propertyInput">
+          <Dropdown
+            ID="classInputEdit"
+            data={this.state.availability.classes}
+            title="Klas"
+            default={{text: "Klas", value: null}}
+            valuechange={this.updateSelected}
+            nodefault={false}
+          />
+          <Dropdown
+            ID="projectInputEdit"
+            data={this.state.projects}
+            title="Project"
+            default={{text: "Project", value: null}}
+            valuechange={this.updateSelected}
+            nodefault={false}
+          />
+          <Dropdown
+            ID="teacher1InputEdit"
+            data={this.state.availability.teachers}
+            title="Docent"
+            default={{text: "Docent", value: null}}
+            valuechange={this.updateSelected}
+            nodefault={false}
+          />
+          <Dropdown
+            ID="teacher2InputEdit"
+            data={this.state.availability.teachers}
+            title="Extra Docent"
+            default={{text: "Extra Docent", value: null}}
+            valuechange={this.updateSelected}
+            nodefault={false}
+          />
+          <Dropdown
+            ID="classroom1InputEdit"
+            data={this.state.availability.classrooms}
+            title="Lokaal"
+            default={{text: "Lokaal", value: null}}
+            valuechange={this.updateSelected}
+            nodefault={false}
+          />
+          <Dropdown
+            ID="classroom2InputEdit"
+            data={this.state.availability.classrooms}
+            title="Extra Lokaal"
+            default={{text: "Extra Lokaal", value: null}}
+            valuechange={this.updateSelected}
+            nodefault={false}
+          />
+          <input type="number" placeholder="Laptops" id="laptopInputEdit" onChange={this.updateInp} />
+          <input type="text" placeholder="Opmerkingen" id="notesInputEdit" onChange={this.updateInp} />
+        </div>
+        <div className="editInputs">
+        </div>
+        <button className="propertyInputContinue" onClick={this.updateAppointment}>Opslaan</button>
+      </div>
+    );
+  }
+
+  updateAppointment = () => {
+    let c = encodeURIComponent(this.state.class);
+    let c1 = encodeURIComponent(this.state.classroom1);
+    let c2 = encodeURIComponent(this.state.classroom2);
+    let t1 = encodeURIComponent(this.state.teacher1);
+    let t2 = encodeURIComponent(this.state.teacher2);
+    let p = encodeURIComponent(this.state.project);
+    let l = encodeURIComponent(this.state.laptops);
+    let n = encodeURIComponent(this.state.note);
+
+    let s = encodeURIComponent(this.state.startTime);
+    let e = encodeURIComponent(this.state.endTime);
+
+    if (!this.state.class && (!this.state.teacher1 && !this.state.teacher2)) {
+      this.setState({message: "Tenminste 1 klas of docent is verplicht"});
+      return;
+    }
+
+    if (!this.state.project) {
+      this.setState({message: "Project is verplicht"});
+      return;
+    }
+
+    let post = `class=${c}&classroom1=${c1}&classroom2=${c2}&teacher1=${t1}&teacher2=${t2}&project=${p}&laptops=${l}&note=${n}&start=${s}&end=${e}`;
+
+    API.put(`/appointments/${this.state.GUID}`, post).then((resp) => {
+      this.props.refreshCallback();
+      this.props.closeCallback();
+    }).catch((error) => {
+      console.log(error);
+      this.setState({message: error.response.data.error});
+    });
   }
 
   modalContent = () => {
+    return (
+      <div className="propertyList">
+        <span>
+          <p>Klas:</p>
+          <p>{this.props.data.class}</p>
+        </span>
+        <span>
+          <p>Docent:</p>
+          <p>{this.props.data.teacher1}</p>
+        </span>
+        <span>
+          <p>Extra Docent:</p>
+          <p>{this.props.data.teacher2}</p>
+        </span>
+        <span>
+          <p>Lokaal:</p>
+          <p>{this.props.data.classroom1}</p>
+        </span>
+        <span>
+          <p>Extra Lokaal:</p>
+          <p>{this.props.data.classroom2}</p>
+        </span>
+        <span>
+          <p>Laptops:</p>
+          <p>{this.props.data.laptops}</p>
+        </span>
+        <span>
+          <p>Project:</p>
+          <p>{this.props.data.project}</p>
+        </span>
+        <span>
+          <p>Opmerking:</p>
+          <p>{this.props.data.notes}</p>
+        </span>
+      </div>
+    );
+  }
+
+  editToggle = () => {
+    if (this.state.edit)
+      return <img src={`${process.env.PUBLIC_URL}/images/enlarge.svg`} alt="View" onClick={()=>this.setState({edit: false})} />;
+    return <img src={`${process.env.PUBLIC_URL}/images/edit.svg`} alt="Edit" onClick={()=>{
+      this.setState({edit: true})
+      this.requestAvailableResources();
+    }} />
+  }
+
+  render() {
+    let content = null;
+
+    if (this.state.openModal && !this.state.edit) content = this.modalContent();
+    if (this.state.openModal && this.state.edit) content = this.modalEdit();
+
     let startHour = new Date(this.props.data.startTimestamp).getHours().toString();
     let startMin = new Date(this.props.data.startTimestamp).getMinutes().toString();
     if (startHour.length < 2) startHour = `0${startHour}`;
@@ -81,48 +301,16 @@ export default class ViewAppointment extends Component {
           <p className="duration">{`${startHour}:${startMin} - ${endHour}:${endMin}`}</p>
           <div className="actionButtons">
             <button>
-              <img src={`${process.env.PUBLIC_URL}/images/edit.svg`} alt="Edit" onClick={this.edit} />
+              {this.editToggle()}
             </button>
             <button>
               <img src={`${process.env.PUBLIC_URL}/images/closeBlack.svg`} alt="Delete" onClick={this.delete} />
             </button>
           </div>
-          <div className="propertyList">
-            <span>
-              <p>Klas:</p>
-              <p>{this.state.class}</p>
-            </span>
-            <span>
-              <p>Docent:</p>
-              <p>{this.state.teacher1}</p>
-            </span>
-            <span>
-              <p>Extra Docent:</p>
-              <p>{this.state.teacher2}</p>
-            </span>
-            <span>
-              <p>Lokaal:</p>
-              <p>{this.state.classroom1}</p>
-            </span>
-            <span>
-              <p>Extra Lokaal:</p>
-              <p>{this.state.classroom2}</p>
-            </span>
-            <span>
-              <p>Project:</p>
-              <p>{this.state.project}</p>
-            </span>
-            <span>
-              <p>Opmerking:</p>
-              <p>{this.state.notes}</p>
-            </span>
-          </div>
+          {(this.state.message) ? <p className="message">{this.state.message}</p> : null}
+          {content}
         </div>
       </React.Fragment>
     );
-  }
-
-  render() {
-    return (this.state.openModal) ? this.modalContent() : null
   }
 }
