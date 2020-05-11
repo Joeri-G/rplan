@@ -51,7 +51,7 @@
   },
   {
     "id": 10,
-    "http": 401,
+    "http": 403,
     "msg": "Please authenticate yourself through the login page, the authentication header or an API key"
   },
   {
