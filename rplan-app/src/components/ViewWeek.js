@@ -238,6 +238,7 @@ class Calendar extends Component {
     super(props);
     this.state = {
       appointments: [],
+      hasUpdatedAppointment: false,
       appointmentWindow: false,
       appointmentDay: null,
       target: this.props.target,
@@ -318,10 +319,14 @@ class Calendar extends Component {
     let startdatestring = formatDate(this.props.startdate);
     let enddatestring = formatDate(getNextDayOfWeek(this.props.startdate, 5));
     API.get(`/appointments/${startdatestring}/${enddatestring}/${this.props.target}`).then((response) => {
-      if (response.data.successful) this.setState({appointments: response.data.response});
+      if (response.data.successful) this.setState({appointments: response.data.response, hasUpdatedAppointment: false})
     }).catch((error) => {
-      // blah blah, error handling and stuff
+      console.log(error);
     });
+  }
+
+  __QUICKFIX_update_hasUpdatedAppointment = () => { // I know this is bad practice, but rn I can't be bothered
+    this.setState({hasUpdatedAppointment: true});
   }
 
   render() {
@@ -343,15 +348,19 @@ class Calendar extends Component {
       }
     };
 
-    const days = [];
-    for (var i = 0; i < 5; i++) {
+    const days = []; // quick fix, this resets the days when this.refresh is called
+    if (!this.state.hasUpdatedAppointment) {
+      this.__QUICKFIX_update_hasUpdatedAppointment();
+    }
+    else {
+      for (var i = 0; i < 5; i++)
       days.push(<Day
-                  appointments={appointments[i]}
-                  day={formatDate(getNextDayOfWeek(this.props.startdate, i + 1))}
-                  dayClick={this.dayClick}
-                  refreshCallback={this.refresh}
-                  key={i}
-                />);
+        appointments={appointments[i]}
+        day={formatDate(getNextDayOfWeek(this.props.startdate, i + 1))}
+        dayClick={this.dayClick}
+        refreshCallback={this.refresh}
+        key={i}
+      />);
     }
 
     return (
@@ -359,13 +368,16 @@ class Calendar extends Component {
         <div className="days">
           {days}
         </div>
-        { this.state.appointmentWindow ? <NewAppointment
-                                            closeCallback={() => {this.setState({appointmentWindow: !this.state.appointmentWindow, appointmentDay: null});}}
-                                            appointmentDay={this.state.appointmentDay}
-                                            displayMode={this.props.mode}
-                                            selectedTarget={this.props.target}
-                                            refreshCallback={this.refresh}
-                                          /> : null }
+        {this.state.appointmentWindow ? <NewAppointment
+                                          closeCallback={() => {
+                                            this.setState({appointmentWindow: !this.state.appointmentWindow, appointmentDay: null});
+                                          }}
+                                          appointmentDay={this.state.appointmentDay}
+                                          displayMode={this.props.mode}
+                                          selectedTarget={this.props.target}
+                                          refreshCallback={this.refresh}
+                                        /> : null
+        }
       </section>
     );
   }
